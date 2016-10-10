@@ -24,9 +24,9 @@ def roll(pst):
     return True if (rnd.random() < pst) else False
 
 
-def get_random_color(colors = COLORS):
-    """Returns random color from list of colors"""
-    return colors[rnd.randint(0, len(colors) - 1)]
+def get_random_element(source = COLORS):
+    """Returns random element from list (default is random color)"""
+    return source[rnd.randint(0, len(source) - 1)]
 
 
 def color_cell(cell,color):
@@ -101,7 +101,7 @@ class Blob:
         elif r < len(self.content) - 1 and roll(self.bs) and self.content[r + 1][c] is not None:
             return self.content[r + 1][c]  # color by bottom cell
         else:
-            return get_random_color()  # randomColor
+            return get_random_element()  # randomColor
 
     def append_row(self):
         """Appends new row to the start of the blob"""

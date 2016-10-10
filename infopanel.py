@@ -9,6 +9,15 @@ from blobs import *
 # Initialization #
 ##################
 
+tips_of_day = [
+    'New row is based on the row below it',
+    'Right click moves first color to the end',
+    'You can pause the game with SPACE',
+    'The game can be beated, it is not endless',
+    'Highscore lasts only for current session',
+    'Game starts by clicking right half of screen'
+]
+
 
 ########################
 # Function definitions #
@@ -17,27 +26,37 @@ from blobs import *
 class Infopanel:
     def __init__(self, screen):
         self.position = INFO_FIELD
-        self.text_position = pyg.Rect(INFO_FIELD[0] + CELLSIZE, INFO_FIELD[1] + FIELDLENGTH*CELLSIZE / 2, (INFOWIDTH - 1) * CELLSIZE, CELLSIZE)
-        self.text_flash_position = pyg.Rect(INFO_FIELD[0] + CELLSIZE, INFO_FIELD[1] + (FIELDLENGTH + 2) * CELLSIZE / 2, (INFOWIDTH - 1) * CELLSIZE, CELLSIZE)
-        self.score_position = pyg.Rect(INFO_FIELD[0] + CELLSIZE, INFO_FIELD[1] + 5 * CELLSIZE, (INFOWIDTH - 1) * CELLSIZE, CELLSIZE,)
-        self.highscore_position = pyg.Rect(INFO_FIELD[0] + CELLSIZE, INFO_FIELD[1] + 7 * CELLSIZE, (INFOWIDTH - 1) * CELLSIZE, CELLSIZE,)
+        self.score_position =INFO_FIELD[1] + 5 * CELLSIZE
+        self.highscore_position = INFO_FIELD[1] + 7 * CELLSIZE
+        self.text_position = INFO_FIELD[1] + FIELDLENGTH * CELLSIZE / 2
+        self.text_flash_position = INFO_FIELD[1] + (FIELDLENGTH + 2) * CELLSIZE / 2
+        self.tips_header_position = INFO_FIELD[1] + (FIELDLENGTH + 8) * CELLSIZE / 2
+        self.tips_text_position = INFO_FIELD[1] + (FIELDLENGTH + 10) * CELLSIZE / 2
         self.text_flesh_visible = True
         self.score = 0
         self.highscore = 0
         self.screen = screen
         self.flash_timer = pyg.time.set_timer(FLASH_EVENT, TEXT_FLESH_TIME)
+        self.tips_timer = pyg.time.set_timer(TIPS_EVENT, TIPS_TIME)
 
-    def write(self, text, surf_start, surf_size=((INFOWIDTH - 1) * CELLSIZE, CELLSIZE), color=WHITE, size=CELLSIZE):
+    def write(self, text, surf_top, surf_left=INFO_FIELD[0] + CELLSIZE, surf_size=((INFOWIDTH - 1) * CELLSIZE, CELLSIZE), color=WHITE, size=CELLSIZE):
         font = pyg.font.SysFont(pyg.font.get_default_font(), size)
+        surf_start = (surf_left, surf_top)
         self.screen.blit(pyg.Surface(surf_size), surf_start)
         self.screen.blit(font.render(text, 1, color), surf_start)
-        pyg.display.update(surf_start)
+        pyg.display.update(pyg.Rect(surf_start, surf_size))
 
     def message(self, text):
         self.write(text, self.text_position)
 
     def message_flash(self, text):
         self.write(text, self.text_flash_position)
+
+    def message_tips_header(self, text):
+        self.write(text, self.tips_header_position)
+
+    def message_tips(self, text):
+        self.write(text, self.tips_text_position, size=(CELLSIZE * 4) // 5)
 
     def add_score(self, score):
         self.score += score
@@ -64,7 +83,7 @@ class Magazine:
 
     def add_ammo(self):
         if len(self.content) < self.maxammo:
-            self.content.append(get_random_color())
+            self.content.append(get_random_element())
             self.draw()
 
     def color_bullet(self, cell, color):

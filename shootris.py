@@ -88,6 +88,9 @@ def play():
                     info.add_score(main_blob.hit(event.pos[0] // CELLSIZE, row, color))
             elif event.button == 3:
                 magazine.reload()
+        elif event.type == TIPS_EVENT:
+            info.message_tips(get_random_element(tips_of_day))
+
 
 ################
 # Main program #
@@ -99,6 +102,8 @@ SCREEN = init_screen()
 info = Infopanel(SCREEN)
 info.message('Welcome!')
 info.message_flash(STARTGAME_TEXT)
+info.message_tips_header('DID YOU KNOW?')
+info.message_tips(get_random_element(tips_of_day))
 
 
 # wating for starting a game
@@ -123,3 +128,5 @@ while waiting:
         else:
             info.message_flash(STARTGAME_TEXT)
         info.text_flesh_visible = not info.text_flesh_visible
+    elif event.type == TIPS_EVENT:
+        info.message_tips(get_random_element(tips_of_day))

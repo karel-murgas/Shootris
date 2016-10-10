@@ -1,5 +1,4 @@
 TODO:
-Tips & tricks ('Did you know?')
 Comments + clean up code
 Project header (licence, author, ...)
 Add sounds (hit, miss, loose, win)
@@ -13,7 +12,7 @@ Exe file - I need a help with this! (Python 3.5, Pyinstaller doesn't work (even 
 
 
 Ideas:
-* Up- gouing blob:
+* Up-going blob:
 ** Subclass of blob
 ** One color (+ Nones)
 ** First generate, then randomly choose first column
