@@ -35,6 +35,8 @@ def pause_game():
             if event.key == pyg.K_SPACE:
                 info.message_flash('')
                 waiting = False
+            elif event.key == pyg.K_ESCAPE:
+                exit()
         elif event.type == FLASH_EVENT:
             if info.text_flesh_visible:
                 info.message_flash('')
@@ -71,16 +73,19 @@ def play():
         elif event.type == MAIN_BLOB_MOVE_EVENT:
             main_blob.move()
         elif event.type == LOOSE_EVENT:
+            sound_game_over.play()
             info.message('GAME OVER')
             magazine.destroy()
             waiting = False
         elif event.type == WIN_EVENT:
+            sound_win.play()
             info.message('YOU WON! Congratulations.')
             magazine.destroy()
             waiting = False
         elif event.type == pyg.MOUSEBUTTONDOWN:
             if event.button == 1:
-                color = magazine.shoot()
+                if GAME_FIELD.collidepoint(event.pos):
+                    color = magazine.shoot()
                 if main_blob.get_rect().collidepoint(event.pos):
                     row = event.pos[1] // CELLSIZE - main_blob.top
                     if event.pos[1] % CELLSIZE > main_blob.row_fraction != 0:
@@ -96,7 +101,6 @@ def play():
 # Main program #
 ################
 
-pyg.init()
 pyg.event.set_blocked([pyg.MOUSEMOTION, pyg.MOUSEBUTTONUP, pyg.KEYUP])
 SCREEN = init_screen()
 info = Infopanel(SCREEN)

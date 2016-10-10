@@ -3,7 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/Shootris.iml" filepath="$PROJECT_DIR$/.idea/Shootris.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../Shotris/Shootris/.idea/Shotris.iml" filepath="$PROJECT_DIR$/../Shotris/Shootris/.idea/Shotris.iml" />
     </modules>
   </component>
 </project>

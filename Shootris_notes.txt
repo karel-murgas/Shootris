@@ -1,17 +1,32 @@
 TODO:
 Comments + clean up code
 Project header (licence, author, ...)
-Add sounds (hit, miss, loose, win)
 Up-going blobs (see bellow)
 When destroying cell, brighter flash fo a moment (50ms?)
 Universal ammo
 Ammo of two colors
 Setting & difficulties
+
+
+Fails:
 Exe file - I need a help with this! (Python 3.5, Pyinstaller doesn't work (even when commenting out the pictures) - it creates exe, which crashes to desktop)
+Add sounds (hit, bounce, miss, reload, empty - there is too much latency :-( )
+
+
+Code cleaning ideas:
+* Lables as instances of class
+** Name, positon (top), flashing (time, status), rect
+** Flashing effect, writing
+
+* Random colors as separate function
+** Takes arguments list and max, generates from [0,max)
+** Generate tips separate, takes and returns also positon (so tips can be always changed)
+
+* Separate constants and settings variables
 
 
 
-Ideas:
+Feature ideas:
 * Up-going blob:
 ** Subclass of blob
 ** One color (+ Nones)
@@ -19,4 +34,10 @@ Ideas:
 ** Destroy when leaving screen
 ** It covers main_blob + acts as part of it for purpose of hit spreading
 ** For spreading of hit I can use corners of cell (collision, color comparing) -> if cell_collides_with_lower_blob and lower_blob[x,y] == color then cell.damage()
-  
+
+
+*RPG model:
+** Finishing levels gives you points and you can buy upgrades with them
+** You can choose level (harder levels = more points)
+** Upgrades like better ammo (universal, double)
+** Skills (after pressing key something happens - maib_blob stopped for x second, recolor blob_part, delete row, ...)   

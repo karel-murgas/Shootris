@@ -15,7 +15,9 @@ tips_of_day = [
     'You can pause the game with SPACE',
     'The game can be beated, it is not endless',
     'Highscore lasts only for current session',
-    'Game starts by clicking right half of screen'
+    'Game starts by clicking right half of screen',
+    'Full magazine will not get new colors',
+    'ESCAPE will end the game instantly'
 ]
 
 

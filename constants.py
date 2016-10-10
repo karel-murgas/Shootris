@@ -5,7 +5,7 @@ import pygame as pyg
 
 FIELDLENGTH = 25
 INFOWIDTH = 13
-MAXROW = 100
+MAXROW = 10
 MAXCOL = 15
 MAXAMMO = 5
 RED = (128, 0, 0)
@@ -13,9 +13,9 @@ GREEN = (0, 128, 0)
 BLUE = (0, 0, 128)
 WHITE = (255, 255, 255)
 YELLOW = (128, 128, 0)
-PURPLE = (128, 0, 128)
+PINK = (128, 0, 128)
 BLACK = (0, 0, 0)
-COLORS = [RED, GREEN, BLUE, PURPLE, YELLOW]
+COLORS = [RED, GREEN, BLUE, PINK, YELLOW]
 LEFTSTICK = 0.7
 BOTTOMSTICK = 0.5
 CELLSIZE = 30
@@ -34,4 +34,9 @@ TIPS_TIME = 8000
 GAME_FIELD = pyg.Rect(0, 0, MAXCOL*CELLSIZE, FIELDLENGTH*CELLSIZE)
 INFO_FIELD = pyg.Rect((MAXCOL + 1) * CELLSIZE, 0, INFOWIDTH*CELLSIZE, FIELDLENGTH*CELLSIZE)
 STARTGAME_TEXT = 'CLICK HERE or press SPACE'
+pyg.init()
 pyg.font.init()
+pyg.mixer.init()
+SOUND_ON = True
+sound_game_over = pyg.mixer.Sound('sound/game_over.wav')
+sound_win = pyg.mixer.Sound('sound/win.wav')
