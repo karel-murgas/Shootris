@@ -1,0 +1,23 @@
+TODO:
+Tips & tricks ('Did you know?')
+Comments + clean up code
+Project header (licence, author, ...)
+Add sounds (hit, miss, loose, win)
+Up-going blobs (see bellow)
+When destroying cell, brighter flash fo a moment (50ms?)
+Universal ammo
+Ammo of two colors
+Setting & difficulties
+Exe file - I need a help with this! (Python 3.5, Pyinstaller doesn't work (even when commenting out the pictures) - it creates exe, which crashes to desktop)
+
+
+
+Ideas:
+* Up- gouing blob:
+** Subclass of blob
+** One color (+ Nones)
+** First generate, then randomly choose first column
+** Destroy when leaving screen
+** It covers main_blob + acts as part of it for purpose of hit spreading
+** For spreading of hit I can use corners of cell (collision, color comparing) -> if cell_collides_with_lower_blob and lower_blob[x,y] == color then cell.damage()
+  
