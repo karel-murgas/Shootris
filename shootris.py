@@ -86,11 +86,11 @@ def play():
             if event.button == 1:
                 if GAME_FIELD.collidepoint(event.pos):
                     color = magazine.shoot()
-                if main_blob.get_rect().collidepoint(event.pos):
-                    row = event.pos[1] // CELLSIZE - main_blob.top
-                    if event.pos[1] % CELLSIZE > main_blob.row_fraction != 0:
-                        row += 1
-                    info.add_score(main_blob.hit(event.pos[0] // CELLSIZE, row, color))
+                    if main_blob.get_rect().collidepoint(event.pos):
+                        row = event.pos[1] // CELLSIZE - main_blob.top
+                        if event.pos[1] % CELLSIZE > main_blob.row_fraction != 0:
+                            row += 1
+                        info.add_score(main_blob.hit(event.pos[0] // CELLSIZE, row, color))
             elif event.button == 3:
                 magazine.reload()
         elif event.type == TIPS_EVENT:
