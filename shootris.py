@@ -115,7 +115,7 @@ while waiting:
             play()
     elif event.type == pyg.MOUSEBUTTONDOWN:
         if event.button == 1 or event.key == 3:
-            if info.text_flash_position.collidepoint(pyg.mouse.get_pos()):
+            if INFO_FIELD.collidepoint(pyg.mouse.get_pos()):
                 play()
     elif event.type == FLASH_EVENT:
         if info.text_flesh_visible:

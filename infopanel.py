@@ -17,10 +17,10 @@ from blobs import *
 class Infopanel:
     def __init__(self, screen):
         self.position = INFO_FIELD
-        self.text_position = (INFO_FIELD[0] + CELLSIZE, INFO_FIELD[1] + FIELDLENGTH*CELLSIZE / 2, (INFOWIDTH - 1) * CELLSIZE, CELLSIZE)
+        self.text_position = pyg.Rect(INFO_FIELD[0] + CELLSIZE, INFO_FIELD[1] + FIELDLENGTH*CELLSIZE / 2, (INFOWIDTH - 1) * CELLSIZE, CELLSIZE)
         self.text_flash_position = pyg.Rect(INFO_FIELD[0] + CELLSIZE, INFO_FIELD[1] + (FIELDLENGTH + 2) * CELLSIZE / 2, (INFOWIDTH - 1) * CELLSIZE, CELLSIZE)
-        self.score_position = (INFO_FIELD[0] + CELLSIZE, INFO_FIELD[1] + 5 * CELLSIZE, (INFOWIDTH - 1) * CELLSIZE, CELLSIZE,)
-        self.highscore_position = (INFO_FIELD[0] + CELLSIZE, INFO_FIELD[1] + 7 * CELLSIZE, (INFOWIDTH - 1) * CELLSIZE, CELLSIZE,)
+        self.score_position = pyg.Rect(INFO_FIELD[0] + CELLSIZE, INFO_FIELD[1] + 5 * CELLSIZE, (INFOWIDTH - 1) * CELLSIZE, CELLSIZE,)
+        self.highscore_position = pyg.Rect(INFO_FIELD[0] + CELLSIZE, INFO_FIELD[1] + 7 * CELLSIZE, (INFOWIDTH - 1) * CELLSIZE, CELLSIZE,)
         self.text_flesh_visible = True
         self.score = 0
         self.highscore = 0
@@ -56,7 +56,7 @@ class Magazine:
     def __init__(self, screen, max_ammo=MAXAMMO, event=ADD_AMMO_EVENT, speed=AMMO_REPLENISH_SPEED):
         self.maxammo = max_ammo
         self.screen = screen
-        self.position = (INFO_FIELD[0] + CELLSIZE, INFO_FIELD[1] + CELLSIZE, (INFOWIDTH - 1) * CELLSIZE, 2 * CELLSIZE)
+        self.position = pyg.Rect(INFO_FIELD[0] + CELLSIZE, INFO_FIELD[1] + CELLSIZE, (INFOWIDTH - 1) * CELLSIZE, 2 * CELLSIZE)
         self.content = deque([])
         self.add_ammo()
         self.event = event
