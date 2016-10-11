@@ -27,9 +27,10 @@ import pygame as pyg
 # Global initializations #
 ##########################
 
-pyg.init()
 pyg.font.init()
+pyg.mixer.pre_init(44100, -16, 2, 2048)  # to fix sound delay
 pyg.mixer.init()
+pyg.init()
 
 
 #########
@@ -51,6 +52,7 @@ CELL = pyg.Surface((CELLSIZE, CELLSIZE))
 sound_game_over = pyg.mixer.Sound('sound/game_over.wav')
 sound_win = pyg.mixer.Sound('sound/win.wav')
 sound_bgm = pyg.mixer.Sound('sound/background.wav')
+sound_hit_success = pyg.mixer.Sound('sound/hit_success.wav')
 
 # Texts #
 TEXT_STARTGAME = 'CLICK HERE or press SPACE'

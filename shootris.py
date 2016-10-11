@@ -71,7 +71,7 @@ def play():
     info.message('LEFT shoot, RIGHT change')
     info.message_flash('')
     if SOUND_BGM_ON:
-        sound_bgm.play()
+        sound_bgm.play(loops=-1)
 
     # main cycle #
     waiting = True

@@ -129,6 +129,8 @@ class Blob:
     def hit(self, c, r, color):
         """Determines, if hit was success. If it was, deletes cells and checks and pop out empty bottom rows"""
         if self.content[r][c] == color:
+            if SOUND_EFFECTS_ON:
+                sound_hit_success.play()
             score = self.damage(r, c, color)
             draw_blob(self.screen, self.field, self.content, self.top, self.row_fraction)
             while len(self.content) > 0 and self.content[len(self.content) - 1] == [None] * self.cols:
