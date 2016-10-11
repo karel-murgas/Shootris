@@ -53,6 +53,10 @@ sound_game_over = pyg.mixer.Sound('sound/game_over.wav')
 sound_win = pyg.mixer.Sound('sound/win.wav')
 sound_bgm = pyg.mixer.Sound('sound/background.wav')
 sound_hit_success = pyg.mixer.Sound('sound/hit_success.wav')
+sound_hit_fail = pyg.mixer.Sound('sound/hit_fail.wav')  # a little bit louder would be better
+sound_reload = pyg.mixer.Sound('sound/reload.ogg')
+sound_miss = pyg.mixer.Sound('sound/miss.wav')
+sound_empty = pyg.mixer.Sound('sound/empty.wav')
 
 # Texts #
 TEXT_STARTGAME = 'CLICK HERE or press SPACE'

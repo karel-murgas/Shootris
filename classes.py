@@ -139,6 +139,11 @@ class Blob:
                 self.win()
             return score
         else:
+            if SOUND_EFFECTS_ON:
+                if self.content[r][c] != None:
+                    sound_hit_fail.play()
+                else:
+                    sound_miss.play()
             return 0
 
 
@@ -223,6 +228,8 @@ class Magazine:
             self.draw()
             return bullet
         else:
+            if SOUND_EFFECTS_ON:
+                sound_empty.play()
             return None
 
     def destroy(self):
@@ -236,6 +243,8 @@ class Magazine:
 
     def reload(self):
         if not self.is_empty():
+            if SOUND_EFFECTS_ON:
+                sound_reload.play()
             bullet = self.content.popleft()
             self.content.append(bullet)
             self.draw()
