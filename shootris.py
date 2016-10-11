@@ -1,16 +1,32 @@
+"""Maim script for Shootris. Covers gameplay."""
+#    Copyright (C) 2016  Karel "laird Odol" Murgas
+#    karel.murgas@gmail.com
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
 #############
 # Libraries #
 #############
 
 from sys import exit
-from infopanel import *
-from math import ceil
+from classes import *
 
 
 ########################
 # Function definitions #
 ########################
-
 
 def init_screen():
     """Gets the screen ready and draws environment"""
@@ -54,8 +70,10 @@ def play():
     info.resetscore()
     info.message('LEFT shoot, RIGHT change')
     info.message_flash('')
+    if SOUND_BGM_ON:
+        sound_bgm.play(loops=-1)
 
-    # main cycle
+    # main cycle #
     waiting = True
     while waiting:
         event = pyg.event.poll()
@@ -73,12 +91,16 @@ def play():
         elif event.type == MAIN_BLOB_MOVE_EVENT:
             main_blob.move()
         elif event.type == LOOSE_EVENT:
-            sound_game_over.play()
+            sound_bgm.stop()
+            if SOUND_EFFECTS_ON:
+                sound_game_over.play()
             info.message('GAME OVER')
             magazine.destroy()
             waiting = False
         elif event.type == WIN_EVENT:
-            sound_win.play()
+            sound_bgm.stop()
+            if SOUND_EFFECTS_ON:
+                sound_win.play()
             info.message('YOU WON! Congratulations.')
             magazine.destroy()
             waiting = False
@@ -86,31 +108,36 @@ def play():
             if event.button == 1:
                 if GAME_FIELD.collidepoint(event.pos):
                     color = magazine.shoot()
-                    if main_blob.get_rect().collidepoint(event.pos):
-                        row = event.pos[1] // CELLSIZE - main_blob.top
-                        if event.pos[1] % CELLSIZE > main_blob.row_fraction != 0:
-                            row += 1
-                        info.add_score(main_blob.hit(event.pos[0] // CELLSIZE, row, color))
+                    if color != None:
+                        if main_blob.get_rect().collidepoint(event.pos):
+                            row = event.pos[1] // CELLSIZE - main_blob.top
+                            if event.pos[1] % CELLSIZE > main_blob.row_fraction != 0:
+                                row += 1
+                            info.add_score(main_blob.hit(event.pos[0] // CELLSIZE, row, color))
+                        else:
+                            if SOUND_EFFECTS_ON:
+                                sound_miss.play()
             elif event.button == 3:
                 magazine.reload()
         elif event.type == TIPS_EVENT:
-            info.message_tips(get_random_element(tips_of_day))
+            info.message_tips(get_random_tip()[1])
 
 
 ################
 # Main program #
 ################
 
+# sets up screen and so on - needs code cleaning #
 pyg.event.set_blocked([pyg.MOUSEMOTION, pyg.MOUSEBUTTONUP, pyg.KEYUP])
 SCREEN = init_screen()
 info = Infopanel(SCREEN)
 info.message('Welcome!')
-info.message_flash(STARTGAME_TEXT)
+info.message_flash(TEXT_STARTGAME)
 info.message_tips_header('DID YOU KNOW?')
-info.message_tips(get_random_element(tips_of_day))
+info.message_tips(get_random_tip()[1])
 
 
-# wating for starting a game
+# waiting for starting a game #
 waiting = True
 while waiting:
     event = pyg.event.poll()
@@ -130,7 +157,7 @@ while waiting:
         if info.text_flesh_visible:
             info.message_flash('')
         else:
-            info.message_flash(STARTGAME_TEXT)
+            info.message_flash(TEXT_STARTGAME)
         info.text_flesh_visible = not info.text_flesh_visible
     elif event.type == TIPS_EVENT:
-        info.message_tips(get_random_element(tips_of_day))
+        info.message_tips(get_random_tip()[1])
