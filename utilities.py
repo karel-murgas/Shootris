@@ -56,7 +56,7 @@ def draw_cell(screen, r, c, color, row_fraction=0):
     """Blits cell to surface"""
     if color is None:
         color = BLACK
-    screen.blit(color_surface(color, CELL), (c * CELLSIZE, r * CELLSIZE - rest_of_cell(row_fraction)))
+    screen.blit(color_surface(color, CELL), (c * CS, r * CS - rest_of_cell(row_fraction)))
 
 
 def draw_blob(screen, field, area, start_row, row_fraction=0):
@@ -67,7 +67,7 @@ def draw_blob(screen, field, area, start_row, row_fraction=0):
     pyg.display.update(field)
 
 
-def rest_of_cell(fraction, total=CELLSIZE):
+def rest_of_cell(fraction, total=CS):
     """Tells how much of a cell is above line, if fraction of cell is bellow"""
     if fraction == 0:
         return 0

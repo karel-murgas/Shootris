@@ -42,6 +42,7 @@ Code cleaning ideas:
            -> destroy it's area blob (code: type(group).__name__ == 'area'; tohle ověří jestli grupa group má classu 'area')
            -> check for adjacent area blobs (main vs upgoing)
 * It's possible to extend parent method! So I can extend kill() to do some cool effects! (define it as a new method + call parent method in it - Tobi's explosions will be possible
+* Background (used by clear) will start as black; when cell is killed, it blits rect of BGIMG to that surgace
  
 
 

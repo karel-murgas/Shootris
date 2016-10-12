@@ -45,8 +45,9 @@ WHITE = (255, 255, 255)
 YELLOW = (128, 128, 0)
 PINK = (128, 0, 128)
 BLACK = (0, 0, 0)
-CELLSIZE = 30
-CELL = pyg.Surface((CELLSIZE, CELLSIZE))
+CS = 30
+CELL = pyg.Surface((CS, CS))
+BGIMG = pyg.image.load('images/background3.jpg')
 
 # Sound #
 sound_game_over = pyg.mixer.Sound('sound/game_over.wav')
@@ -98,7 +99,7 @@ SOUND_BGM_ON = True
 
 # Gameplay #
 MAXCOLORS = 5  # how many of defined colors will be used
-MAXROW = 100  # how many lines will be generated per game
+MAXROW = 5  # how many lines will be generated per game
 MAXCOL = 15  # width of game field
 MAXAMMO = 5  # length of magazine
 LEFTSTICK = 0.7  # probability of taking color from left cell
@@ -116,5 +117,5 @@ TIPS_TIME = 8000
 # Calculated #
 ##############
 
-GAME_FIELD = pyg.Rect(0, 0, MAXCOL*CELLSIZE, FIELDLENGTH*CELLSIZE)
-INFO_FIELD = pyg.Rect((MAXCOL + 1) * CELLSIZE, 0, INFOWIDTH*CELLSIZE, FIELDLENGTH*CELLSIZE)
+GAME_FIELD = pyg.Rect(0, 0, MAXCOL * CS, FIELDLENGTH * CS)
+INFO_FIELD = pyg.Rect((MAXCOL + 1) * CS, 0, INFOWIDTH * CS, FIELDLENGTH * CS)
