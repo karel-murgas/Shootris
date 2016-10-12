@@ -31,13 +31,13 @@ from classes import *
 def init_screen():
     """Gets the screen ready and draws environment"""
     total_width = (MAXCOL + INFOWIDTH + 1)
-    pyg.display.set_icon(pyg.image.load('icon_crosshair.gif'))
+    pyg.display.set_icon(pyg.image.load('icon_crosshair_my.gif'))
     screen_ = pyg.display.set_mode((total_width*CELLSIZE, FIELDLENGTH*CELLSIZE))
     pyg.display.set_caption('Shootris')
     for r in range(FIELDLENGTH):
         draw_cell(screen_, r, MAXCOL, WHITE)
     pyg.display.update()
-    pyg.mouse.set_cursor(*pyg.cursors.load_xbm('cursor_crosshair.xbm', 'cursor_crosshair-mask.xbm'))
+    pyg.mouse.set_cursor(*pyg.cursors.load_xbm('cursor_crosshair_my.xbm', 'cursor_crosshair_my-mask.xbm'))
     return screen_
 
 
@@ -72,6 +72,7 @@ def play():
     info.message_flash('')
     if SOUND_BGM_ON:
         sound_bgm.play(loops=-1)
+    clock = pyg.time.Clock()
 
     # main cycle #
     waiting = True
@@ -108,7 +109,7 @@ def play():
             if event.button == 1:
                 if GAME_FIELD.collidepoint(event.pos):
                     color = magazine.shoot()
-                    if color != None:
+                    if color is not None:
                         if main_blob.get_rect().collidepoint(event.pos):
                             row = event.pos[1] // CELLSIZE - main_blob.top
                             if event.pos[1] % CELLSIZE > main_blob.row_fraction != 0:
@@ -121,6 +122,7 @@ def play():
                 magazine.reload()
         elif event.type == TIPS_EVENT:
             info.message_tips(get_random_tip()[1])
+        clock.tick(60)
 
 
 ################
