@@ -49,13 +49,11 @@ class Cell(pyg.sprite.Sprite):
         self.image.blit(img)
 
 
-
-
 class Blob(pyg.sprite.RenderUpdates):
     """Areas containing cells"""
 
     def __init__(self, direction, ls, bs):
-        pyg.sprite.Group.__init__(self)
+        pyg.sprite.RenderUpdates.__init__(self)
         self.direction = direction
         self.l_prob = ls
         self.t_prob = bs
@@ -73,15 +71,30 @@ class Blob(pyg.sprite.RenderUpdates):
             color = get_random_color()
         return color
 
-    def generate_cell(self, left, top, w_cor=0, h_cor=0):
-        where = pyg.Surface((CS + 2 * w_cor, CS + 2 * h_cor))
-        cell = Cell(where, left * CS - w_cor, top * CS - h_cor)
+    def generate_cell(self, left, top, size=CS):
+        where = pyg.Surface((size, size))
+        cell = Cell(where, left * size, top * size)
         cell.colorate(self.generate_cell_color(cell))
         return cell
 
     def add_row(self, left=0, top=-1, width=MAXCOL):
         for i in range(left, width):
             self.add(self.generate_cell(i + left, top))
+
+
+class Wall(pyg.sprite.Group):
+    """Contains and draws wall cells"""
+
+    def __init__(self):
+        pyg.sprite.Group.__init__(self)
+
+    def generate_cell(self, left, top, size=CS):
+
+
+    def create_wall(self, left, top, width=GAME_FIELD, height=MAXROW):
+        for i in range(width + 1):
+            self.add()
+
 
 
 class Background():
