@@ -47,7 +47,7 @@ PINK = (128, 0, 128)
 BLACK = (0, 0, 0)
 CS = 30
 IMG_PATH = 'images'
-WALL_IMG = 'wall.gif'
+WALL_IMG = 'wall_texture.gif'
 BACKGROUNDS = {
     'girls': ['bed.jpg', 'blond.jpg', 'bent.jpg'],
     'cats': ['double.jpg', 'white.jpg', 'beige.jpg']
@@ -121,5 +121,5 @@ TIPS_TIME = 8000
 # Calculated #
 ##############
 
-GAME_FIELD = pyg.Rect(0, 0, MAXCOL * CS, FIELDLENGTH * CS)
-INFO_FIELD = pyg.Rect((MAXCOL + 1) * CS, 0, INFOWIDTH * CS, FIELDLENGTH * CS)
+GAME_FIELD = pyg.Rect(1 * CS, 1 * CS, MAXCOL * CS, FIELDLENGTH * CS)
+INFO_FIELD = pyg.Rect((MAXCOL + 2) * CS, 1 * CS, INFOWIDTH * CS, FIELDLENGTH * CS)

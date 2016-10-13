@@ -30,9 +30,10 @@ from classes import *
 
 def init_screen():
     """Gets the screen ready and draws environment"""
-    total_width = (MAXCOL + INFOWIDTH + 1)
+    total_width = (MAXCOL + INFOWIDTH + 2)  # game field width + info field width + walls
+    total_height = (FIELDLENGTH + 2)  # game field height + 2
     pyg.display.set_icon(pyg.image.load(IMG_PATH + '/icon_crosshair.gif'))
-    screen_ = pyg.display.set_mode((total_width * CS, FIELDLENGTH * CS))
+    screen_ = pyg.display.set_mode((total_width * CS, total_height * CS))
     pyg.display.set_caption('Shootris')
 #    for r in range(FIELDLENGTH):
 #        draw_cell(screen_, r, MAXCOL, WHITE)
@@ -58,7 +59,7 @@ def pause_game():
 def play(screen):
     """Runs the main loop with game"""
 
-    bg = Background(MAXCOL * CS, MAXROW * CS, theme='cats')
+    bg = Background(MAXCOL + 2, FIELDLENGTH + 2, theme='cats', size=CS)
 
     #   if SOUND_BGM_ON:
  #       sound_bgm.play(loops=-1)
@@ -66,7 +67,7 @@ def play(screen):
 
     mb = Blob(1, LEFTSTICK, BOTTOMSTICK)
     for i in range(MAXROW):
-        mb.add_row(0, -1 * i, MAXCOL)
+        mb.add_row(1, -1 * i, MAXCOL)
 
     # main cycle #
     waiting = True
@@ -84,6 +85,7 @@ def play(screen):
         mb.update(screen, 'move', mb.direction)
         mb.clear(screen, bg.image)
         mb.draw(screen)
+        wall.draw(screen)
         # pyg.display.flip()
         pyg.display.update()
         clock.tick(60)
@@ -96,6 +98,10 @@ def play(screen):
 # sets up screen and so on - needs code cleaning #
 pyg.event.set_blocked([pyg.MOUSEMOTION, pyg.MOUSEBUTTONUP, pyg.KEYUP])
 screen = init_screen()
+wall = Wall()
+wall.create_wall(0, 0, width=MAXCOL, height=FIELDLENGTH, image=WALL_IMG, color=WHITE, size=CS)
+wall.draw(screen)
+pyg.display.update()
 
 # waiting for starting a game #
 waiting = True

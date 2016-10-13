@@ -42,10 +42,10 @@ def collide_cell_touch_width(*args):
     t1, t2 = s1.rect.top, s2.rect.top
 
     # Too much far (including top and bottom sides and corners)
-    if abs(l1 - l2) > 30 or abs(t1 - t2) >= 30:
+    if abs(l1 - l2) > size or abs(t1 - t2) >= size:
         return False
     # Corner touch
-    elif abs(l1 - l2) == 30 and abs(t1 - t2) == 30:
+    elif abs(l1 - l2) == size and abs(t1 - t2) == size:
         return False
     # Side or inside touch
     else:
@@ -66,10 +66,10 @@ def collide_cell_touch_height(*args):
     t1, t2 = s1.rect.top, s2.rect.top
 
     # Too much far (including top and bottom sides and corners)
-    if abs(t1 - t2) > 30 or abs(l1 - l2) >= 30:
+    if abs(t1 - t2) > size or abs(l1 - l2) >= size:
         return False
     # Corner touch
-    elif abs(t1 - t2) == 30 and abs(l1 - l2) == 30:
+    elif abs(t1 - t2) == size and abs(l1 - l2) == size:
         return False
     # Side or inside touch
     else:
@@ -88,10 +88,10 @@ def collide_cell_touch(*args):
     t1, t2 = s1.rect.top, s2.rect.top
 
     # Too much far (including top and bottom sides and corners)
-    if abs(l1 - l2) > 30 or abs(t1 - t2) > 30:
+    if abs(l1 - l2) > size or abs(t1 - t2) > size:
         return False
     # Corner touch
-    elif abs(l1 - l2) == 30 and abs(t1 - t2) == 30:
+    elif abs(l1 - l2) == size and abs(t1 - t2) == size:
         return False
     # Side or inside touch
     else:

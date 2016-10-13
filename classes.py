@@ -46,7 +46,7 @@ class Cell(pyg.sprite.Sprite):
 
     def load_image(self, image, path=IMG_PATH):
         img = pyg.image.load(path + '/' + image)
-        self.image.blit(img)
+        self.image.blit(img, (0, 0))
 
 
 class Blob(pyg.sprite.RenderUpdates):
@@ -78,8 +78,8 @@ class Blob(pyg.sprite.RenderUpdates):
         return cell
 
     def add_row(self, left=0, top=-1, width=MAXCOL):
-        for i in range(left, width):
-            self.add(self.generate_cell(i + left, top))
+        for i in range(left, width + left):
+            self.add(self.generate_cell(i, top))
 
 
 class Wall(pyg.sprite.Group):
@@ -88,23 +88,34 @@ class Wall(pyg.sprite.Group):
     def __init__(self):
         pyg.sprite.Group.__init__(self)
 
-    def generate_cell(self, left, top, size=CS):
+    def generate_cell(self, left, top, image, color, size):
+        where = pyg.Surface((size, size))
+        cell = Cell(where, left * size, top * size)
+        cell.colorate(color)
+        cell.load_image(image)
+        return cell
 
-
-    def create_wall(self, left, top, width=GAME_FIELD, height=MAXROW):
+    def create_wall(self, left, top, width=MAXCOL, height=FIELDLENGTH, size=CS, image=WALL_IMG, color=WHITE):
         for i in range(width + 1):
-            self.add()
-
+            self.add(self.generate_cell(left + i, top, image, color, size))
+        for j in range(height + 1):
+            self.add(self.generate_cell(left + i + 1, top + j, image, color, size))
+        for i in reversed(range(width + 1)):
+            self.add(self.generate_cell(left + i + 1, top + j + 1, image, color, size))
+        for j in range(height + 1):
+            self.add(self.generate_cell(left, top + j + 1, image, color, size))
 
 
 class Background():
     """Background image and it's properties"""
 
-    def __init__(self, width, height, theme='random', pic='random', source=BACKGROUNDS, path=IMG_PATH):
-        self.clear = pyg.Surface((width, height))
+    def __init__(self, width, height, area=GAME_FIELD, theme='random', pic='random', source=BACKGROUNDS, path=IMG_PATH, size=CS):
+        self.clear = pyg.Surface((width * size, height * size))
         self.clear.fill(BLACK)
-        self.image = self.load_image(path, theme, pic, source)
+        self.image = self.clear
+        self.image.blit(self.load_image(path, theme, pic, source), area)
         self.act = self.clear
+        self.img_area = area
 
     def load_image(self, path, theme, pic, source):
         if theme == 'random':
@@ -113,4 +124,6 @@ class Background():
             pic = rnd.randrange(len(source[theme]))
         return pyg.image.load(path + '/' + theme + '/' + source[theme][pic])
 
+    def reveal(self, rect):
+        self.act.blit(self.image, rect, rect)
 

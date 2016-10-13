@@ -1,6 +1,5 @@
 TODO:
 Clean up code
-Background image
 Up-going blobs (see bellow)
 When destroying cell, brighter flash fo a moment (50ms?)
 Universal ammo
@@ -18,31 +17,23 @@ Code cleaning ideas:
 ** Name, positon (top), flashing (time, status), rect
 ** Flashing effect, writing
 
-* Random colors as separate function
-** Generate tips separate, takes and returns also positon (so tips can be always changed)
-
-* Learn, how to use sprites!
-** Use them for cell blobs
-** Use sprite groups as blobs (hopefully)
-** It seems to have great potential
-** Erased cells may uncover new background image (nude lady of course)
-** Learn from some tetris game
-
 * Every cell is a sprite
 * Group all_cells
 * Group main_blob
 * Group upgoing_blob
-* Group upgoing_shadow_blob (for each cell in upgoing blob do +1 left&top and +1 top&bottom "shadow" cell for collision testing in "is next to?")
-* Group area blob (area with same color) - pushed into list? As there is no group of groups... (or is there? or can it be created?)
+* Group area blob (area with same color) - store them in set, find it by "for i in sprite groups if group in set:""                                          
 * Color at the level of group for simple condition to avoid unnecessary collision testing
 * When cell is created:
  - if takes color from left / down -> join that group
  - look left / down - if the color is same, merge groups
 * Shooting -> collision of mouse pointer with all_cells blob
-           -> destroy it's area blob (code: type(group).__name__ == 'area'; tohle ověří jestli grupa group má classu 'area')
+           -> destroy it's area blob (code: type(group).__name__ == 'area'; thist tests, if group type is area - probably redundant because of area set
+           -> probably collide first for upgoing blob, if miss, then collide with main blob
            -> check for adjacent area blobs (main vs upgoing)
 * It's possible to extend parent method! So I can extend kill() to do some cool effects! (define it as a new method + call parent method in it - Tobi's explosions will be possible
 * Background (used by clear) will start as black; when cell is killed, it blits rect of BGIMG to that surgace
+* At game over - background will fade into black
+* At win - background will fade in to full picture
  
 
 
