@@ -56,4 +56,4 @@ class Blob(pyg.sprite.RenderUpdates):
 
     def add_row(self, left=0, top=-1, width=MAXCOL):
         for i in range(left, width):
-            self.add(self.generate_cell(i * left, top))
+            self.add(self.generate_cell(i + left, top))

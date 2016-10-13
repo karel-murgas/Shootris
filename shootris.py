@@ -64,7 +64,7 @@ def play(screen):
 
     mb = Blob(1)
     for i in range(MAXROW):
-        mb.add_row(i, -1, MAXCOL)
+        mb.add_row(0, -1 * i, MAXCOL)
 
     # main cycle #
     waiting = True
