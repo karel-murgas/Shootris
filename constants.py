@@ -46,8 +46,12 @@ YELLOW = (128, 128, 0)
 PINK = (128, 0, 128)
 BLACK = (0, 0, 0)
 CS = 30
-CELL = pyg.Surface((CS, CS))
-BGIMG = pyg.image.load('images/background3.jpg')
+IMG_PATH = 'images'
+WALL_IMG = 'wall.gif'
+BACKGROUNDS = {
+    'girls': ['bed.jpg', 'blond.jpg', 'bent.jpg'],
+    'cats': ['double.jpg', 'white.jpg', 'beige.jpg']
+}
 
 # Sound #
 sound_game_over = pyg.mixer.Sound('sound/game_over.wav')
@@ -99,7 +103,7 @@ SOUND_BGM_ON = True
 
 # Gameplay #
 MAXCOLORS = 5  # how many of defined colors will be used
-MAXROW = 5  # how many lines will be generated per game
+MAXROW = 10  # how many lines will be generated per game
 MAXCOL = 15  # width of game field
 MAXAMMO = 5  # length of magazine
 LEFTSTICK = 0.7  # probability of taking color from left cell

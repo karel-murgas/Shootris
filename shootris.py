@@ -31,13 +31,13 @@ from classes import *
 def init_screen():
     """Gets the screen ready and draws environment"""
     total_width = (MAXCOL + INFOWIDTH + 1)
-    pyg.display.set_icon(pyg.image.load('icon_crosshair_my.gif'))
+    pyg.display.set_icon(pyg.image.load(IMG_PATH + '/icon_crosshair.gif'))
     screen_ = pyg.display.set_mode((total_width * CS, FIELDLENGTH * CS))
     pyg.display.set_caption('Shootris')
-    for r in range(FIELDLENGTH):
-        draw_cell(screen_, r, MAXCOL, WHITE)
+#    for r in range(FIELDLENGTH):
+#        draw_cell(screen_, r, MAXCOL, WHITE)
     pyg.display.update()
-    pyg.mouse.set_cursor(*pyg.cursors.load_xbm('cursor_crosshair_my.xbm', 'cursor_crosshair_my-mask.xbm'))
+    pyg.mouse.set_cursor(*pyg.cursors.load_xbm(IMG_PATH + '/cursor_crosshair.xbm', IMG_PATH + '/cursor_crosshair-mask.xbm'))
     return screen_
 
 
@@ -58,11 +58,13 @@ def pause_game():
 def play(screen):
     """Runs the main loop with game"""
 
- #   if SOUND_BGM_ON:
+    bg = Background(MAXCOL * CS, MAXROW * CS, theme='cats')
+
+    #   if SOUND_BGM_ON:
  #       sound_bgm.play(loops=-1)
     clock = pyg.time.Clock()
 
-    mb = Blob(1)
+    mb = Blob(1, LEFTSTICK, BOTTOMSTICK)
     for i in range(MAXROW):
         mb.add_row(0, -1 * i, MAXCOL)
 
@@ -80,7 +82,7 @@ def play(screen):
             elif event.key == pyg.K_SPACE:
                 pause_game()
         mb.update(screen, 'move', mb.direction)
-        mb.clear(screen, BGIMG)
+        mb.clear(screen, bg.image)
         mb.draw(screen)
         # pyg.display.flip()
         pyg.display.update()
