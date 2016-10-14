@@ -70,6 +70,7 @@ def play(screen):
     mb.add_row(1, 1, MAXCOL)
 
     cursor = Point()
+    shooter = Gun()
 
     # Main cycle #
     waiting = True
@@ -88,11 +89,7 @@ def play(screen):
         elif event.type == pyg.MOUSEBUTTONDOWN:
             if event.button == 1:
                 cursor.update(event.pos)
-                hit = pyg.sprite.spritecollide(cursor, mb, 0)
-                if hit:
-                    print(hit[0].color)
-                else:
-                    print('miss - ' + str(cursor.rect))
+                print(shooter.shoot(pyg.sprite.spritecollide(cursor, mb, 0)))
         elif event.type == MAIN_BLOB_MOVE_EVENT:
             if not mb.move():
                 pyg.event.post(pyg.event.Event(LOSE_EVENT))

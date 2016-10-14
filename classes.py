@@ -27,17 +27,23 @@ from utilities import *
 class Cell(pyg.sprite.Sprite):
     """Default class for all cells"""
 
-    def __init__(self, cell_type, left, top):
+    def __init__(self, cell_type, left, top, col, row):
         pyg.sprite.Sprite.__init__(self)
         self.image = cell_type
         self.color = None
         self.rect = self.image.get_rect()
         self.rect.move_ip(left, top)
+        self.col = col
+        self.row = row
 
     def update(self, action, direction=0):
         if action == 'move':
             self.rect = self.rect.move(0, direction)
         if action == 'destroy':
+            # check for neighbours to share joy with
+            # check for other group touch collision to share the joy with
+            # return list of all killed + iteration win which they were killed
+            # main loop then kills them?
             self.kill()
 
     def colorate(self, color):
@@ -73,28 +79,21 @@ class Blob(pyg.sprite.RenderUpdates):
         self.generated_rows = 0
         self.matrix = []
 
-    def generate_cell_color(self, col, row):
+    def generate_cell_color(self, cell):
         """Generate color with regards to other cells in blob"""
-#        ln = pyg.sprite.spritecollide(cell, self, 0, collided=collide_cell_touch_width)  # left neighbour
-#        bn = pyg.sprite.spritecollide(cell, self, 0, collided=collide_cell_touch_height)  # bottom neighbour
 
-#        if ln and (ln[0].color is not None) and roll(self.l_prob):
-#            color = ln[0].color
-#        elif bn and (bn[0].color is not None) and roll(self.t_prob):
-#            color = bn[0].color
-#        else:
-        if roll(self.l_prob) and col > 0 and self.matrix[row][col - 1] is not None:
-            color = self.matrix[row][col - 1]
-        elif roll(self.b_prob) and row > 0 and self.matrix[row - 1][col] is not None:
-            color = self.matrix[row - 1][col]
+        if roll(self.l_prob) and cell.col > 0 and self.matrix[cell.row][cell.col - 1] is not None:
+            color = self.matrix[cell.row][cell.col - 1].color
+        elif roll(self.b_prob) and cell.row > 0 and self.matrix[cell.row - 1][cell.col] is not None:
+            color = self.matrix[cell.row - 1][cell.col].color
         else:
             color = get_random_color()
         return color
 
     def generate_cell(self, left, top, col, row, size=CS):
         where = pyg.Surface((size, size))
-        cell = Cell(where, left * size, top * size)
-        cell.colorate(self.generate_cell_color(col, row))
+        cell = Cell(where, left * size, top * size, col, row)
+        cell.colorate(self.generate_cell_color(cell))
         return cell
 
     def add_row(self, left=0, top=-1, width=MAXCOL):
@@ -102,7 +101,7 @@ class Blob(pyg.sprite.RenderUpdates):
         for i in range(left, width + left):
             cell = self.generate_cell(i, top, i - left, self.generated_rows)
             self.add(cell)
-            self.matrix[self.generated_rows].append(cell.color)
+            self.matrix[self.generated_rows].append(cell)
         self.generated_rows += 1
 
     def test_destroy(self):
@@ -133,7 +132,7 @@ class Wall(pyg.sprite.Group):
 
     def generate_cell(self, left, top, image, color, size):
         where = pyg.Surface((size, size))
-        cell = Cell(where, left * size, top * size)
+        cell = Cell(where, left * size, top * size, left, top)
         cell.colorate(color)
         cell.load_image(image)
         return cell
@@ -170,3 +169,32 @@ class Background():
     def reveal(self, rect):
         self.act.blit(self.image, rect, rect)
 
+
+class Gun():
+    """Define atributes and methods used for shooting"""
+
+    def __init__(self, maxammo=MAXAMMO):
+        self.maxammo = maxammo
+        self.magazine = deque([])
+
+    def shoot(self, target):
+        if not target:  # missed that blob
+            return 'missed'
+        else:
+            target[0].kill()
+            return 'hit'
+
+    def add_ammo(self):
+        if len(self.magazine) < self.maxammo:
+            self.magazine.append(get_random_color())
+            return 'added'
+        else:
+            return 'full'
+
+    def change_ammo(self):
+        if len(self.magazine) > 1:
+            bullet = self.magazine.popleft()
+            self.magazine.append(bullet)
+            return 'changed'
+        else:
+            return 'empty'
