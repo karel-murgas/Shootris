@@ -34,9 +34,9 @@ class Cell(pyg.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.move_ip(left, top)
 
-    def update(self, screen, action, direction=0):
+    def update(self, action, direction=0):
         if action == 'move':
-            self. rect = self.rect.move(0, direction)
+            self.rect = self.rect.move(0, direction)
         if action == 'destroy':
             self.kill()
 
@@ -52,34 +52,66 @@ class Cell(pyg.sprite.Sprite):
 class Blob(pyg.sprite.RenderUpdates):
     """Areas containing cells"""
 
-    def __init__(self, direction, ls, bs):
+    def __init__(self, direction, ls, bs, max_rows=MAXROW):
         pyg.sprite.RenderUpdates.__init__(self)
         self.direction = direction
         self.l_prob = ls
-        self.t_prob = bs
+        self.b_prob = bs
+        self.offset = 0
+        self.max_rows = max_rows
+        self.generated_rows = 0
+        self.matrix = []
 
-    def generate_cell_color(self, cell):
+    def generate_cell_color(self, col, row):
         """Generate color with regards to other cells in blob"""
-        ln = pyg.sprite.spritecollide(cell, self, 0, collided=collide_cell_touch_width)  # left neighbour
-        bn = pyg.sprite.spritecollide(cell, self, 0, collided=collide_cell_touch_height)  # bottom neighbour
+#        ln = pyg.sprite.spritecollide(cell, self, 0, collided=collide_cell_touch_width)  # left neighbour
+#        bn = pyg.sprite.spritecollide(cell, self, 0, collided=collide_cell_touch_height)  # bottom neighbour
 
-        if ln and (ln[0].color is not None) and roll(self.l_prob):
-            color = ln[0].color
-        elif bn and (bn[0].color is not None) and roll(self.t_prob):
-            color = bn[0].color
+#        if ln and (ln[0].color is not None) and roll(self.l_prob):
+#            color = ln[0].color
+#        elif bn and (bn[0].color is not None) and roll(self.t_prob):
+#            color = bn[0].color
+#        else:
+        if roll(self.l_prob) and col > 0 and self.matrix[row][col - 1] is not None:
+            color = self.matrix[row][col - 1]
+        elif roll(self.b_prob) and row > 0 and self.matrix[row - 1][col] is not None:
+            color = self.matrix[row - 1][col]
         else:
             color = get_random_color()
         return color
 
-    def generate_cell(self, left, top, size=CS):
+    def generate_cell(self, left, top, col, row, size=CS):
         where = pyg.Surface((size, size))
         cell = Cell(where, left * size, top * size)
-        cell.colorate(self.generate_cell_color(cell))
+        cell.colorate(self.generate_cell_color(col, row))
         return cell
 
     def add_row(self, left=0, top=-1, width=MAXCOL):
+        self.matrix.append([])
         for i in range(left, width + left):
-            self.add(self.generate_cell(i, top))
+            cell = self.generate_cell(i, top, i - left, self.generated_rows)
+            self.add(cell)
+            self.matrix[self.generated_rows].append(cell.color)
+        self.generated_rows += 1
+
+    def test_destroy(self):
+        for cell in iter(self):
+            if cell.rect.top == FIELDLENGTH * CS:
+                return True
+        return False
+
+    def destroy(self):
+        return False
+
+    def move(self):
+        if self.offset == 0 and self.generated_rows < self.max_rows:  # when the time is right, add new row
+            self.add_row(1, 0)
+        self.update('move', self.direction)  # update cells
+        self.offset = (self.offset + self.direction) % CS
+        if self.offset == 0:
+            if self.test_destroy():
+                return self.destroy()
+        return True  # move is OK
 
 
 class Wall(pyg.sprite.Group):

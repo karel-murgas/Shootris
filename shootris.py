@@ -1,4 +1,4 @@
-"""Maim script for Shootris. Covers gameplay."""
+"""Main script for Shootris. Covers gameplay."""
 #    Copyright (C) 2016  Karel "laird Odol" Murgas
 #    karel.murgas@gmail.com
 #
@@ -60,35 +60,42 @@ def play(screen):
     """Runs the main loop with game"""
 
     bg = Background(MAXCOL + 2, FIELDLENGTH + 2, theme='cats', size=CS)
+    if SOUND_BGM_ON:
+        sound_bgm.play(loops=-1)
 
-    #   if SOUND_BGM_ON:
- #       sound_bgm.play(loops=-1)
     clock = pyg.time.Clock()
+    pyg.time.set_timer(MAIN_BLOB_MOVE_EVENT, MAIN_BLOB_SPEED)
 
-    mb = Blob(1, LEFTSTICK, BOTTOMSTICK)
-    for i in range(MAXROW):
-        mb.add_row(1, -1 * i, MAXCOL)
+    mb = Blob(1, LEFTSTICK, BOTTOMSTICK, MAXROW)
+    mb.add_row(1, 1, MAXCOL)
 
-    # main cycle #
+    # Main cycle #
     waiting = True
     while waiting:
         event = pyg.event.poll()
-        if event.type == pyg.QUIT:
+
+        if event.type == pyg.QUIT:  # end program
             exit()
         elif event.type == pyg.KEYDOWN:
-            if event.key == pyg.K_ESCAPE:
+            if event.key == pyg.K_ESCAPE:  # end program
                 exit()
         #    if event.key == pyg.K_DOWN:  # for manual testing
         #        main_blob.move()
-            elif event.key == pyg.K_SPACE:
+            elif event.key == pyg.K_SPACE:  # pause game
                 pause_game()
-        mb.update(screen, 'move', mb.direction)
-        mb.clear(screen, bg.image)
-        mb.draw(screen)
+        elif event.type == MAIN_BLOB_MOVE_EVENT:
+            if not mb.move():
+                pyg.event.post(pyg.event.Event(LOSE_EVENT))
+                pyg.time.set_timer(MAIN_BLOB_MOVE_EVENT, 0)
+            mb.clear(screen, bg.image)
+            mb.draw(screen)
+        elif event.type == LOSE_EVENT:
+            print('Game over')
+
+        # Draws everything
         wall.draw(screen)
-        # pyg.display.flip()
         pyg.display.update()
-        clock.tick(60)
+        clock.tick(60)  # max 60 fps
 
 
 ################

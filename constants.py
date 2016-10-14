@@ -82,7 +82,7 @@ COLORS = [RED, GREEN, BLUE, PINK, YELLOW]
 # Events #
 WIN_EVENT = pyg.USEREVENT + 1
 ADD_AMMO_EVENT = pyg.USEREVENT + 2
-LOOSE_EVENT = pyg.USEREVENT + 3
+LOSE_EVENT = pyg.USEREVENT + 3
 MAIN_BLOB_MOVE_EVENT = pyg.USEREVENT + 4
 # SMALL_BLOB_MOVE_EVENT = pyg.USEREVENT + 5
 FLASH_EVENT = pyg.USEREVENT + 6
@@ -99,7 +99,7 @@ INFOWIDTH = 13  # how wide will info filed be
 
 # Sound #
 SOUND_EFFECTS_ON = True
-SOUND_BGM_ON = True
+SOUND_BGM_ON = False
 
 # Gameplay #
 MAXCOLORS = 5  # how many of defined colors will be used
