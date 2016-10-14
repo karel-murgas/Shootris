@@ -34,6 +34,10 @@ Code cleaning ideas:
 * Background (used by clear) will start as black; when cell is killed, it blits rect of BGIMG to that surgace
 * At game over - background will fade into black
 * At win - background will fade in to full picture
+
+
+* Hit only checks main blob. If color matches OR (collision with upgoing blob AND color matches upgoing blob) -> kill it
+* Then hit checks upgoing blob - if hit, kill it all
  
 
 
