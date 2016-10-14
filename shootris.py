@@ -69,6 +69,8 @@ def play(screen):
     mb = Blob(1, LEFTSTICK, BOTTOMSTICK, MAXROW)
     mb.add_row(1, 1, MAXCOL)
 
+    cursor = Point()
+
     # Main cycle #
     waiting = True
     while waiting:
@@ -83,6 +85,14 @@ def play(screen):
         #        main_blob.move()
             elif event.key == pyg.K_SPACE:  # pause game
                 pause_game()
+        elif event.type == pyg.MOUSEBUTTONDOWN:
+            if event.button == 1:
+                cursor.update(event.pos)
+                hit = pyg.sprite.spritecollide(cursor, mb, 0)
+                if hit:
+                    print(hit[0].color)
+                else:
+                    print('miss - ' + str(cursor.rect))
         elif event.type == MAIN_BLOB_MOVE_EVENT:
             if not mb.move():
                 pyg.event.post(pyg.event.Event(LOSE_EVENT))

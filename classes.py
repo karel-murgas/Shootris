@@ -49,6 +49,17 @@ class Cell(pyg.sprite.Sprite):
         self.image.blit(img, (0, 0))
 
 
+class Point(pyg.sprite.Sprite):
+    """Simple point enabling to test collisions"""
+
+    def __init__(self):
+        pyg.sprite.Sprite.__init__(self)
+        self.rect = pyg.Rect(0, 0, 1, 1)
+
+    def update(self, target):
+        self.rect = pyg.Rect(target, (1, 1))
+
+
 class Blob(pyg.sprite.RenderUpdates):
     """Areas containing cells"""
 
