@@ -92,7 +92,7 @@ def play(screen):
         elif event.type == pyg.MOUSEBUTTONDOWN:
             if event.button == 1:
                 cursor.update(event.pos)
-                print(shooter.shoot(cursor, mb, ub, deadpool))
+                print(shooter.shoot(cursor, mb, ub, deadpool, bg))
                 ammo_display.show_ammo(shooter.magazine)
             if event.button == 3:
                 if shooter.change_ammo() == 'changed':
@@ -112,7 +112,7 @@ def play(screen):
             pyg.time.set_timer(ADD_AMMO_EVENT, 0)
 
         # Draws everything
-        ALL_SPRITES.clear(screen, bg.image)
+        ALL_SPRITES.clear(screen, bg.act)
         ALL_SPRITES.draw(screen)
         pyg.display.update()
         clock.tick(60)  # max 60 fps

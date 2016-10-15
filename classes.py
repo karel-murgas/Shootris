@@ -265,10 +265,9 @@ class Background:
 
     def __init__(self, width, height, area=GAME_FIELD, theme='random', pic='random', source=BACKGROUNDS, path=IMG_PATH, size=CS):
         self.clear = pyg.Surface((width * size, height * size))
-        self.clear.fill(BLACK)
-        self.image = self.clear
+        self.act = pyg.Surface((width * size, height * size))
+        self.image = pyg.Surface((width * size, height * size))
         self.image.blit(self.load_image(path, theme, pic, source), area)
-        self.act = self.clear
         self.img_area = area
 
     def load_image(self, path, theme, pic, source):
@@ -280,6 +279,7 @@ class Background:
 
     def reveal(self, rect):
         self.act.blit(self.image, rect, rect)
+        print(rect)
 
 
 class Gun:
@@ -307,7 +307,7 @@ class Gun:
 
         return explode_ub
 
-    def shoot(self, cursor, mb, ub, deadpool):
+    def shoot(self, cursor, mb, ub, deadpool, background):
         score = 0
         if len(self.magazine) > 0:  # have amoo
             bullet = self.magazine.popleft()
@@ -328,6 +328,7 @@ class Gun:
                     if mb_hit.color == bullet:  # hit right color
                         upkill = self.explode(mb, ub, deadpool, deque([mb_hit]), bullet)
                         for c in iter(deadpool):
+                            background.reveal(c.rect)
                             c.kill()
                             score += 1
                     else:  # hit wrong color
@@ -349,6 +350,7 @@ class Gun:
                 mb_to_die |= neighbours_to_die
                 self.explode(mb, ub, deadpool, deque(mb_to_die), bullet)
                 for c in iter(deadpool):
+                    background.reveal(c.rect)
                     c.kill()
                     score += 1
         else:
