@@ -49,31 +49,39 @@ class Cell(pyg.sprite.Sprite):
 
         self.rect = self.rect.move(0, direction)
 
-    def rat_neighbour(self, mb, ub, color):
+    def rat_neighbour(self, mb, ub, color, lifetime):
         """Find neighbours, with given color and report if same color upgoing-blob is in the way"""
 
         upkill = False
         to_die = []
 
-        # Living left neighbour of right color
-        if (self.col > 0 and mb.matrix[self.row][self.col - 1] is not None
-                and mb.matrix[self.row][self.col - 1].color == color):
-            to_die.append(mb.matrix[self.row][self.col - 1])
+        # Living left neighbour
+        if self.col > 0 and mb.matrix[self.row][self.col - 1] is not None:
+            c = mb.matrix[self.row][self.col - 1]
+            if c.color == color:  # of right color
+                c.time_to_die = lifetime
+                to_die.append(c)
 
         # Living top neighbour of right color
-        if (self.row < mb.generated_rows - 1 and mb.matrix[self.row + 1][self.col] is not None
-                and mb.matrix[self.row + 1][self.col].color == color):
-            to_die.append(mb.matrix[self.row + 1][self.col])
+        if self.row < mb.generated_rows - 1 and mb.matrix[self.row + 1][self.col] is not None:
+            c = mb.matrix[self.row + 1][self.col]
+            if c.color == color:  # of right color
+                c.time_to_die = lifetime
+                to_die.append(c)
 
         # Living right neighbour of right color
-        if (self.col < mb.max_cols - 1 and mb.matrix[self.row][self.col + 1] is not None
-                and mb.matrix[self.row][self.col + 1].color == color):
-            to_die.append(mb.matrix[self.row][self.col + 1])
+        if self.col < mb.max_cols - 1 and mb.matrix[self.row][self.col + 1] is not None:
+            c = mb.matrix[self.row][self.col + 1]
+            if c.color == color:  # of right color
+                c.time_to_die = lifetime
+                to_die.append(c)
 
         # Living bottom neighbour of right color
-        if (self.row > 0 and mb.matrix[self.row - 1][self.col] is not None
-                and mb.matrix[self.row - 1][self.col].color == color):
-            to_die.append(mb.matrix[self.row - 1][self.col])
+        if self.row > 0 and mb.matrix[self.row - 1][self.col] is not None:
+            c = mb.matrix[self.row - 1][self.col]
+            if c.color == color:  # of right color
+                c.time_to_die = lifetime
+                to_die.append(c)
 
         if ub.color == color and ub.generated_rows != 0:
             if pyg.sprite.spritecollideany(self, ub, collide_cell_touch):
@@ -290,10 +298,9 @@ class Gun:
             cell = to_die.popleft()
             if mb.matrix[cell.row][cell.col] is not None:  # still living cell
                 mb.matrix[cell.row][cell.col] = None  # consider it dead
-                cell.time_to_live = cell.time_to_live + 1  # TODO: fix
                 deadpool.add(cell)
 
-                volunteers, collision = cell.rat_neighbour(mb, ub, color)  # get new cells to die
+                volunteers, collision = cell.rat_neighbour(mb, ub, color, cell.time_to_live + 1)  # get new cells to die
                 if collision:  # the up-going blob is to die too
                     explode_ub = True
                 to_die.extend(volunteers)
