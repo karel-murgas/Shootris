@@ -60,7 +60,7 @@ def pause_game():
 def play(screen):
     """Runs the main loop with game"""
 
-    bg = Background(MAXCOL + 2, FIELDLENGTH + 2, theme='cats', size=CS)
+    bg = Background(screen, MAXCOL + 2, FIELDLENGTH + 2, theme='cats', size=CS)
     if SOUND_BGM_ON:
         sound_bgm.play(loops=-1)
 
@@ -75,13 +75,16 @@ def play(screen):
 
     cursor = Point()
     shooter = Gun()
-    ammo_display = Magazine(screen)
+    ammo_display = Magazine(screen, 1, 2)
+    score_display = Label(screen, 1, 6)
+    score = 0
 
     # Main cycle #
     waiting = True
     while waiting:
         event = pyg.event.poll()
 
+        # Controls
         if event.type == pyg.QUIT:  # end program
             exit()
         elif event.type == pyg.KEYDOWN:
@@ -92,11 +95,19 @@ def play(screen):
         elif event.type == pyg.MOUSEBUTTONDOWN:
             if event.button == 1:
                 cursor.update(event.pos)
-                print(shooter.shoot(cursor, mb, ub, deadpool, bg))
+                sc, status, win = shooter.shoot(cursor, mb, ub, deadpool, bg)
                 ammo_display.show_ammo(shooter.magazine)
+                if sc > 0:  # got some points
+                    score += sc
+                    score_display.write('Score: ' + str(score))
+                    # TODO: Sounds depending on status
+                if win:  # won
+                    pyg.event.post(pyg.event.Event(WIN_EVENT))
             if event.button == 3:
                 if shooter.change_ammo() == 'changed':
                     ammo_display.show_ammo(shooter.magazine)
+
+        # Timed events
         elif event.type == MAIN_BLOB_MOVE_EVENT:
             if not mb.move():
                 pyg.event.post(pyg.event.Event(LOSE_EVENT))
@@ -105,11 +116,21 @@ def play(screen):
         elif event.type == ADD_AMMO_EVENT:
             if shooter.add_ammo() == 'added':
                 ammo_display.show_ammo(shooter.magazine)
+
+        # Special events
         elif event.type == LOSE_EVENT:
             print('Game over')
             pyg.time.set_timer(MAIN_BLOB_MOVE_EVENT, 0)
             pyg.time.set_timer(UP_BLOB_MOVE_EVENT, 0)
             pyg.time.set_timer(ADD_AMMO_EVENT, 0)
+            bg.fade_out(ALL_SPRITES)
+        elif event.type == WIN_EVENT:
+            pyg.time.set_timer(MAIN_BLOB_MOVE_EVENT, 0)
+            pyg.time.set_timer(UP_BLOB_MOVE_EVENT, 0)
+            pyg.time.set_timer(ADD_AMMO_EVENT, 0)
+            ub.reset()
+            bg.fade_in(ALL_SPRITES)
+            print('You won')
 
         # Draws everything
         ALL_SPRITES.clear(screen, bg.act)

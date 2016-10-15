@@ -23,6 +23,13 @@ Code cleaning ideas:
 * At game over - background will fade into black
 * At win - background will fade in to full picture
 
+Next steps:
+1) Why does the first shot lag? (Probably background?)
+2) Start new game
+3) UI
+4) Sound
+5) Fade in/ou
+
 
 Deadpool:
 Each cell has lifetime

@@ -175,6 +175,17 @@ class Blob(pyg.sprite.RenderUpdates):
                 return False
         return True  # move is OK
 
+    def ready_to_die(self, cells, reveal, background=None):
+        """Kill cells in iterative variable, count score, reveal background, check winning"""
+
+        score = 0
+        for c in cells:
+            if reveal and background:
+                background.reveal(c.rect)
+            c.kill()
+            score += 1
+        return score
+
 
 class UpBlob(Blob):
     """Blob going upward"""
@@ -215,7 +226,7 @@ class UpBlob(Blob):
         else:
             return True
 
-    def destroy(self):
+    def reset(self):
         return UpBlob(self.direction, self.l_prob, self.b_prob, self.left, self.top, self.layer, self.max_rows_orig,
                       self.width)
 
@@ -231,7 +242,7 @@ class UpBlob(Blob):
         self.offset = (self.offset + self.direction) % CS
         if self.offset == 0:
             if self.test_destroy():
-                return self.destroy()
+                return self.reset()
         return self  # move is OK
 
 
@@ -263,12 +274,13 @@ class Wall(pyg.sprite.Group):
 class Background:
     """Background image and it's properties"""
 
-    def __init__(self, width, height, area=GAME_FIELD, theme='random', pic='random', source=BACKGROUNDS, path=IMG_PATH, size=CS):
+    def __init__(self, screen, width, height, area=GAME_FIELD, theme='random', pic='random', source=BACKGROUNDS, path=IMG_PATH, size=CS):
         self.clear = pyg.Surface((width * size, height * size))
         self.act = pyg.Surface((width * size, height * size))
         self.image = pyg.Surface((width * size, height * size))
         self.image.blit(self.load_image(path, theme, pic, source), area)
         self.img_area = area
+        self.screen = screen
 
     def load_image(self, path, theme, pic, source):
         if theme == 'random':
@@ -279,7 +291,14 @@ class Background:
 
     def reveal(self, rect):
         self.act.blit(self.image, rect, rect)
-        print(rect)
+
+    def fade_in(self, group=ALL_SPRITES):
+        self.screen.blit(self.image, (0, 0))
+        group.draw(self.screen)
+
+    def fade_out(self, group=ALL_SPRITES):
+        self.screen.blit(self.clear, (0, 0))
+        group.draw(self.screen)
 
 
 class Gun:
@@ -309,6 +328,7 @@ class Gun:
 
     def shoot(self, cursor, mb, ub, deadpool, background):
         score = 0
+        status = None
         if len(self.magazine) > 0:  # have amoo
             bullet = self.magazine.popleft()
             upkill = False
@@ -319,7 +339,7 @@ class Gun:
                 if ub.color == bullet:  # hit right color
                     upkill = True
                 else:  # hit wrong color
-                    return 0, 'hit_failed'
+                    status = 'hit_fail'
             else:
                 mb_hit = pyg.sprite.spritecollideany(cursor, mb, 0)
 
@@ -327,35 +347,36 @@ class Gun:
                 if mb_hit:
                     if mb_hit.color == bullet:  # hit right color
                         upkill = self.explode(mb, ub, deadpool, deque([mb_hit]), bullet)
-                        for c in iter(deadpool):
-                            background.reveal(c.rect)
-                            c.kill()
-                            score += 1
+                        score += mb.ready_to_die(iter(deadpool), True, background)
+                        status = 'hit_successful'
                     else:  # hit wrong color
-                        return 0, 'hit failed'
+                        status = 'hit_fail'
                 else:  # missed everything
-                    return 0, 'miss'
+                    status = 'miss'
 
             # Upgoing blob was hit
             if upkill:
                 mb_to_die = set(pyg.sprite.groupcollide(mb, ub, 0, 0))  # directly covered - color doesn't matter
                 mb_neighbours = pyg.sprite.groupcollide(mb, ub, 0, 0, collide_cell_touch)  # neighbours of ub
 
-                for cell in iter(ub):  # destroy ub and count score
-                    cell.kill()
-                    score += 1
-                ub.destroy()
+                score += ub.ready_to_die(iter(ub), False)  # destroy cells and count score
+                ub.reset()  # reset ub
 
                 neighbours_to_die = set([cell for cell in mb_neighbours if cell.color == bullet])
                 mb_to_die |= neighbours_to_die
                 self.explode(mb, ub, deadpool, deque(mb_to_die), bullet)
-                for c in iter(deadpool):
-                    background.reveal(c.rect)
-                    c.kill()
-                    score += 1
+                score += mb.ready_to_die(iter(deadpool), True, background)
+                status = 'hit_successful'
         else:
-            return 0, 'empty'
-        return score, 'hit_successful'
+            status = 'empty'
+
+        # Check for winning
+        if status == 'hit_successful' and mb.max_rows == mb.generated_rows and len(mb.sprites()) == 0:  # mb is destroyed
+            win = True
+        else:
+            win = False
+
+        return score, status, win
 
     def add_ammo(self):
         if len(self.magazine) < self.maxammo:
