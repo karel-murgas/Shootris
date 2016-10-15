@@ -28,55 +28,6 @@ from constants import *
 # Function definitions #
 ########################
 
-# not used
-def collide_cell_touch_width(*args):
-    """Return True if cells touch by left side, right side or they intersect
-    To be used in sprite collide functions.
-    """
-    try:
-        s1, s2 = args
-    except ValueError:
-        print("Wrong number of arguments for collision function: " + str(args))
-        return False
-    size = CS  # I don't know how to pass it right
-    l1, l2 = s1.rect.left, s2.rect.left
-    t1, t2 = s1.rect.top, s2.rect.top
-
-    # Too much far (including top and bottom sides and corners)
-    if abs(l1 - l2) > size or abs(t1 - t2) >= size:
-        return False
-    # Corner touch
-    elif abs(l1 - l2) == size and abs(t1 - t2) == size:
-        return False
-    # Side or inside touch
-    else:
-        return True
-
-
-# not used
-def collide_cell_touch_height(*args):
-    """Return True if cells touch by top side, bottom side or they intersect
-    To be used in sprite collide functions.
-    """
-    try:
-        s1, s2 = args
-    except ValueError:
-        print("Wrong number of arguments for collision function: " + str(args))
-        return False
-    size = CS  # I don't know how to pass it right
-    l1, l2 = s1.rect.left, s2.rect.left
-    t1, t2 = s1.rect.top, s2.rect.top
-
-    # Too much far (including top and bottom sides and corners)
-    if abs(t1 - t2) > size or abs(l1 - l2) >= size:
-        return False
-    # Corner touch
-    elif abs(t1 - t2) == size and abs(l1 - l2) == size:
-        return False
-    # Side or inside touch
-    else:
-        return True
-
 
 def collide_cell_touch(*args):
     """Return True if cells touch or intersect (except corner touch)"""

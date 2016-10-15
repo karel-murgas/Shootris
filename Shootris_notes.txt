@@ -1,10 +1,11 @@
 TODO:
-Clean up code
-When destroying cell, brighter flash fo a moment (50ms?)
-Universal ammo
-Ammo of two colors
-Setting & difficulties
-Handle potential errors
+* Clean up code
+* When destroying cell, brighter flash fo a moment (50ms?)
+* Frame upgoing blob (not individual cells) 
+* Universal ammo
+* Ammo of two colors
+* Setting & difficulties
+* Handle potential errors
 
 
 Fails:
@@ -22,10 +23,31 @@ Code cleaning ideas:
 * At game over - background will fade into black
 * At win - background will fade in to full picture
 
+Hit:
+1) Check up blob first. If true, groupcollide(ub, mb) -> change to set (to remove duplicities), change to list, exclude Nones and call destroy on that list (don't forget to kill up blob)
+2) If miss, check the main blob. If hit, call destruction on that cell. Return (with others), if explosion hitted the up blob. If true, do step 1.
 
-* Hit only checks main blob. If color matches OR (collision with upgoing blob AND color matches upgoing blob) -> kill it
-* Then hit checks upgoing blob - if hit, kill it all
-* solve color - none with upblob - none with upblob - color chain (check neighbours while killing upblob? spread even through dead blobs if they are covered?) 
+Destroy:
+BFS - queue of cells to destroy - take one, None it's neighbours and add them to queue
+Killable neighbours - method of cell
+Ignore upblob (handled elsewhere)
+
+return:
+cells: list (group die_slowly?)
+kill_upblob: bool
+
+None them:
+change matrix to None
+Can't kill them - I need them to move with old group
+add them to slowly_dying group
+
+Die_slowly:
+Each cell has lifetime
+If lifetime <= 0 -> kill it
+Else - update color
+
+
+* solve color - none with upblob - none with upblob - color chain (check neighbours while killing upblob? spread even through dead blobs if they are covered?)
 
 
 

@@ -48,8 +48,9 @@ BLACK = (0, 0, 0)
 UP_BLOB_ALPHA = 192
 CS = 30
 IMG_PATH = 'images'
-WALL_IMG = 'wall_texture.gif'
-UP_IMG = 'up_texture.gif'
+WALL_IMG = 'up_texture_black.gif'
+#WALL_IMG = 'wall_texture.gif'
+UP_IMG = 'up_texture_white.gif'
 BACKGROUNDS = {
     'girls': ['bed.jpg', 'blond.jpg', 'bent.jpg'],
     'cats': ['double.jpg', 'white.jpg', 'beige.jpg']
@@ -117,7 +118,7 @@ UP_LEFTSTICK = 0.4
 UP_BOTTOMSTICK = 0.75
 
 # Frequencies #
-AMMO_REPLENISH_SPEED = 1500
+ADD_AMMO_SPEED = 1500
 MAIN_BLOB_SPEED = 80
 UP_BLOB_SPEED = 25
 TEXT_FLESH_TIME = 500
@@ -128,6 +129,7 @@ TIPS_TIME = 8000
 # Calculated #
 ##############
 
-GAME_FIELD = pyg.Rect(1 * CS, 1 * CS, MAXCOL * CS, FIELDLENGTH * CS)
-INFO_FIELD = pyg.Rect((MAXCOL + 2) * CS, 1 * CS, INFOWIDTH * CS, FIELDLENGTH * CS)
-ALL_SPRITES = pyg.sprite.LayeredUpdates()
+GAME_FIELD = pyg.Rect(1 * CS, 1 * CS, MAXCOL * CS, FIELDLENGTH * CS)  # used for background
+INFO_LEFT = MAXCOL + 2
+INFO_FIELD = pyg.Rect((MAXCOL + 2) * CS, 1 * CS, INFOWIDTH * CS, FIELDLENGTH * CS)  # used for interaction with info field
+ALL_SPRITES = pyg.sprite.LayeredUpdates()  # Group for updating gamefield

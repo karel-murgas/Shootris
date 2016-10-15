@@ -21,7 +21,7 @@
 #############
 
 from sys import exit
-from classes import *
+from ui_classes import *
 
 
 ########################
@@ -67,12 +67,15 @@ def play(screen):
     clock = pyg.time.Clock()
 
     mb = Blob(1, LEFTSTICK, BOTTOMSTICK, left=1, top=0, max_rows=MAXROW)
-    ub = Up_blob(-1, UP_LEFTSTICK, UP_BOTTOMSTICK, left=1, top=FIELDLENGTH+2, max_rows=100, width=MAXCOL)
+    ub = UpBlob(-1, UP_LEFTSTICK, UP_BOTTOMSTICK, left=1, top=FIELDLENGTH+2, max_rows=100, width=MAXCOL)
+    deadpool = pyg.sprite.Group()
     pyg.time.set_timer(MAIN_BLOB_MOVE_EVENT, MAIN_BLOB_SPEED)
     pyg.time.set_timer(UP_BLOB_MOVE_EVENT, UP_BLOB_SPEED)
+    pyg.time.set_timer(ADD_AMMO_EVENT, ADD_AMMO_SPEED)
 
     cursor = Point()
     shooter = Gun()
+    ammo_display = Magazine(screen)
 
     # Main cycle #
     waiting = True
@@ -89,16 +92,24 @@ def play(screen):
         elif event.type == pyg.MOUSEBUTTONDOWN:
             if event.button == 1:
                 cursor.update(event.pos)
-                print(shooter.shoot(pyg.sprite.spritecollide(cursor, mb, 0)))
+                print(shooter.shoot(cursor, mb, ub, deadpool))
+                ammo_display.show_ammo(shooter.magazine)
+            if event.button == 3:
+                if shooter.change_ammo() == 'changed':
+                    ammo_display.show_ammo(shooter.magazine)
         elif event.type == MAIN_BLOB_MOVE_EVENT:
             if not mb.move():
                 pyg.event.post(pyg.event.Event(LOSE_EVENT))
         elif event.type == UP_BLOB_MOVE_EVENT:
             ub = ub.move()
+        elif event.type == ADD_AMMO_EVENT:
+            if shooter.add_ammo() == 'added':
+                ammo_display.show_ammo(shooter.magazine)
         elif event.type == LOSE_EVENT:
             print('Game over')
             pyg.time.set_timer(MAIN_BLOB_MOVE_EVENT, 0)
             pyg.time.set_timer(UP_BLOB_MOVE_EVENT, 0)
+            pyg.time.set_timer(ADD_AMMO_EVENT, 0)
 
         # Draws everything
         ALL_SPRITES.clear(screen, bg.image)
