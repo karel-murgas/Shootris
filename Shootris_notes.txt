@@ -1,6 +1,5 @@
 TODO:
 Clean up code
-Up-going blobs (see bellow)
 When destroying cell, brighter flash fo a moment (50ms?)
 Universal ammo
 Ammo of two colors
@@ -17,19 +16,7 @@ Code cleaning ideas:
 ** Name, positon (top), flashing (time, status), rect
 ** Flashing effect, writing
 
-* Every cell is a sprite
-* Group all_cells
-* Group main_blob
-* Group upgoing_blob
-* Group area blob (area with same color) - store them in set, find it by "for i in sprite groups if group in set:""                                          
-* Color at the level of group for simple condition to avoid unnecessary collision testing
-* When cell is created:
- - if takes color from left / down -> join that group
- - look left / down - if the color is same, merge groups
-* Shooting -> collision of mouse pointer with all_cells blob
-           -> destroy it's area blob (code: type(group).__name__ == 'area'; thist tests, if group type is area - probably redundant because of area set
-           -> probably collide first for upgoing blob, if miss, then collide with main blob
-           -> check for adjacent area blobs (main vs upgoing)
+
 * It's possible to extend parent method! So I can extend kill() to do some cool effects! (define it as a new method + call parent method in it - Tobi's explosions will be possible
 * Background (used by clear) will start as black; when cell is killed, it blits rect of BGIMG to that surgace
 * At game over - background will fade into black
@@ -38,22 +25,12 @@ Code cleaning ideas:
 
 * Hit only checks main blob. If color matches OR (collision with upgoing blob AND color matches upgoing blob) -> kill it
 * Then hit checks upgoing blob - if hit, kill it all
- 
+* solve color - none with upblob - none with upblob - color chain (check neighbours while killing upblob? spread even through dead blobs if they are covered?) 
 
-
-
-Feature ideas:
-* Up-going blob:
-** Subclass of blob
-** One color (+ Nones)
-** First generate, then randomly choose first column
-** Destroy when leaving screen
-** It covers main_blob + acts as part of it for purpose of hit spreading
-** For spreading of hit I can use corners of cell (collision, color comparing) -> if cell_collides_with_lower_blob and lower_blob[x,y] == color then cell.damage()
 
 
 *RPG model:
 ** Finishing levels gives you points and you can buy upgrades with them
 ** You can choose level (harder levels = more points)
 ** Upgrades like better ammo (universal, double)
-** Skills (after pressing key something happens - maib_blob stopped for x second, recolor blob_part, delete row, ...)   
+** Skills (after pressing key something happens - maib_blob stopped for x second, recolor blob_part, delete row, move upgoing blob to side...)   
