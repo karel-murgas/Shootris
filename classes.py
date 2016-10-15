@@ -97,10 +97,12 @@ class Blob(pyg.sprite.RenderUpdates):
             color = get_random_color()
         return color
 
-    def generate_cell(self, left, top, col, row, size=CS, alpha=255):
+    def generate_cell(self, left, top, col, row, size=CS, alpha=255, image=None):
         where = pyg.Surface((size, size))
         cell = Cell(where, left * size, top * size, col, row, self.layer, alpha)
         cell.colorate(self.generate_cell_color(cell))
+        if image is not None:
+            cell.load_image(image)
         return cell
 
     def add_row(self):
@@ -145,21 +147,21 @@ class Up_blob(Blob):
     def generate_cell_color(self, *args):
         return self.color
 
-    def add_row(self):
+    def add_row(self, image=UP_IMG):
         i = 0
         while roll(self.l_prob) and self.center - i > self.left:  # generate left
             i += 1
             self.add(self.generate_cell(self.center - i,  self.top, self.center - i, self.generated_rows,
-                                        alpha=UP_BLOB_ALPHA))
+                                        alpha=UP_BLOB_ALPHA, image=image))
 
         self.add(self.generate_cell(self.center,  self.top, self.center, self.generated_rows,
-                                    alpha=UP_BLOB_ALPHA))  # generate center
+                                    alpha=UP_BLOB_ALPHA, image=image))  # generate center
 
         i = 0
         while roll(self.l_prob) and self.center + i < self.left + self.max_cols - 1:  # generate right
             i += 1
             self.add(self.generate_cell(self.center + i,  self.top, self.center + i, self.generated_rows,
-                                        alpha=UP_BLOB_ALPHA))
+                                        alpha=UP_BLOB_ALPHA, image=image))
 
     def test_destroy(self):
         for cell in iter(self):

@@ -49,6 +49,7 @@ UP_BLOB_ALPHA = 192
 CS = 30
 IMG_PATH = 'images'
 WALL_IMG = 'wall_texture.gif'
+UP_IMG = 'up_texture.gif'
 BACKGROUNDS = {
     'girls': ['bed.jpg', 'blond.jpg', 'bent.jpg'],
     'cats': ['double.jpg', 'white.jpg', 'beige.jpg']
