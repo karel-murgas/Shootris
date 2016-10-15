@@ -93,7 +93,7 @@ def play(screen):
             elif event.key == pyg.K_SPACE:  # pause game
                 pause_game()
         elif event.type == pyg.MOUSEBUTTONDOWN:
-            if event.button == 1:
+            if event.button == 1 and GAME_FIELD.collidepoint(pyg.mouse.get_pos()):  # shoot the gamefield
                 cursor.update(event.pos)
                 sc, status, win = shooter.shoot(cursor, mb, ub, deadpool, bg)
                 ammo_display.show_ammo(shooter.magazine)

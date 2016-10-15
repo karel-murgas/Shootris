@@ -48,9 +48,8 @@ BLACK = (0, 0, 0)
 UP_BLOB_ALPHA = 192
 CS = 30
 IMG_PATH = 'images'
-WALL_IMG = 'up_texture_black.gif'
-#WALL_IMG = 'wall_texture.gif'
-UP_IMG = 'up_texture_white.gif'
+WALL_IMG = 'texture_squares_big_black.gif'
+UP_IMG = 'texture_squares_big_white.gif'
 BACKGROUNDS = {
     'girls': ['bed.jpg', 'blond.jpg', 'bent.jpg'],
     'cats': ['double.jpg', 'white.jpg', 'beige.jpg']
@@ -109,7 +108,7 @@ SOUND_BGM_ON = False
 
 # Gameplay #
 MAXCOLORS = 5  # how many of defined colors will be used
-MAXROW = 10  # how many lines will be generated per game
+MAXROW = 100  # how many lines will be generated per game
 MAXCOL = 15  # width of game field
 MAXAMMO = 5  # length of magazine
 LEFTSTICK = 0.7  # probability of taking color from left cell
@@ -119,7 +118,7 @@ UP_BOTTOMSTICK = 0.75
 
 # Frequencies #
 ADD_AMMO_SPEED = 1500
-MAIN_BLOB_SPEED = 80
+MAIN_BLOB_SPEED = 100
 UP_BLOB_SPEED = 25
 TEXT_FLESH_TIME = 500
 TIPS_TIME = 8000

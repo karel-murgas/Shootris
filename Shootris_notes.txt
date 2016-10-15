@@ -24,9 +24,9 @@ Code cleaning ideas:
 * At win - background will fade in to full picture
 
 Next steps:
-1) Why does the first shot lag? (Probably background?)
+1) Why does the first shot lag? (Probably background?); sometimes it doesn't shoot?
 2) Start new game
-3) UI
+3) UI - progress bar (rows_generated / max_row)
 4) Sound
 5) Fade in/ou
 
