@@ -28,6 +28,7 @@ from constants import *
 # Function definitions #
 ########################
 
+# not used
 def collide_cell_touch_width(*args):
     """Return True if cells touch by left side, right side or they intersect
     To be used in sprite collide functions.
@@ -52,6 +53,7 @@ def collide_cell_touch_width(*args):
         return True
 
 
+# not used
 def collide_cell_touch_height(*args):
     """Return True if cells touch by top side, bottom side or they intersect
     To be used in sprite collide functions.
@@ -98,9 +100,9 @@ def collide_cell_touch(*args):
         return True
 
 
-def roll(pst):
+def roll(prob):
     """Tests random value [0,1) against given probability"""
-    return True if (rnd.random() < pst) else False
+    return True if (rnd.random() < prob) else False
 
 
 def get_random_color(colors=COLORS, stop=MAXCOLORS):

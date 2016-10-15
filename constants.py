@@ -45,6 +45,7 @@ WHITE = (255, 255, 255)
 YELLOW = (128, 128, 0)
 PINK = (128, 0, 128)
 BLACK = (0, 0, 0)
+UP_BLOB_ALPHA = 192
 CS = 30
 IMG_PATH = 'images'
 WALL_IMG = 'wall_texture.gif'
@@ -52,6 +53,9 @@ BACKGROUNDS = {
     'girls': ['bed.jpg', 'blond.jpg', 'bent.jpg'],
     'cats': ['double.jpg', 'white.jpg', 'beige.jpg']
 }
+LAYER_WALL = 3  # most visible
+LAYER_UP = 2
+LAYER_MAIN = 1  # most hidden
 
 # Sound #
 sound_game_over = pyg.mixer.Sound('sound/game_over.wav')
@@ -108,6 +112,8 @@ MAXCOL = 15  # width of game field
 MAXAMMO = 5  # length of magazine
 LEFTSTICK = 0.7  # probability of taking color from left cell
 BOTTOMSTICK = 0.5  # probability of taking color from left cell
+UP_LEFTSTICK = 0.4
+UP_BOTTOMSTICK = 0.75
 
 # Frequencies #
 AMMO_REPLENISH_SPEED = 1500
@@ -123,3 +129,4 @@ TIPS_TIME = 8000
 
 GAME_FIELD = pyg.Rect(1 * CS, 1 * CS, MAXCOL * CS, FIELDLENGTH * CS)
 INFO_FIELD = pyg.Rect((MAXCOL + 2) * CS, 1 * CS, INFOWIDTH * CS, FIELDLENGTH * CS)
+ALL_SPRITES = pyg.sprite.LayeredUpdates()

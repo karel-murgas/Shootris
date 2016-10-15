@@ -66,8 +66,8 @@ def play(screen):
     clock = pyg.time.Clock()
     pyg.time.set_timer(MAIN_BLOB_MOVE_EVENT, MAIN_BLOB_SPEED)
 
-    mb = Blob(1, LEFTSTICK, BOTTOMSTICK, MAXROW)
-    mb.add_row(1, 1, MAXCOL)
+    mb = Blob(1, LEFTSTICK, BOTTOMSTICK, left=1, top=0, max_rows=MAXROW)
+    ub = Up_blob(-5, UP_LEFTSTICK, UP_BOTTOMSTICK, left=1, top=FIELDLENGTH+2, max_rows=100, width=MAXCOL)
 
     cursor = Point()
     shooter = Gun()
@@ -94,13 +94,14 @@ def play(screen):
             if not mb.move():
                 pyg.event.post(pyg.event.Event(LOSE_EVENT))
                 pyg.time.set_timer(MAIN_BLOB_MOVE_EVENT, 0)
-            mb.clear(screen, bg.image)
-            mb.draw(screen)
+            ub = ub.move()
+
         elif event.type == LOSE_EVENT:
             print('Game over')
 
         # Draws everything
-        wall.draw(screen)
+        ALL_SPRITES.clear(screen, bg.image)
+        ALL_SPRITES.draw(screen)
         pyg.display.update()
         clock.tick(60)  # max 60 fps
 
