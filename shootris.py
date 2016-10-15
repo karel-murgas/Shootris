@@ -38,7 +38,8 @@ def init_screen():
 #    for r in range(FIELDLENGTH):
 #        draw_cell(screen_, r, MAXCOL, WHITE)
     pyg.display.update()
-    pyg.mouse.set_cursor(*pyg.cursors.load_xbm(IMG_PATH + '/cursor_crosshair.xbm', IMG_PATH + '/cursor_crosshair-mask.xbm'))
+    pyg.mouse.set_cursor(*pyg.cursors.load_xbm(IMG_PATH + '/cursor_crosshair.xbm',
+                                               IMG_PATH + '/cursor_crosshair-mask.xbm'))
     return screen_
 
 
@@ -64,10 +65,11 @@ def play(screen):
         sound_bgm.play(loops=-1)
 
     clock = pyg.time.Clock()
-    pyg.time.set_timer(MAIN_BLOB_MOVE_EVENT, MAIN_BLOB_SPEED)
 
     mb = Blob(1, LEFTSTICK, BOTTOMSTICK, left=1, top=0, max_rows=MAXROW)
-    ub = Up_blob(-5, UP_LEFTSTICK, UP_BOTTOMSTICK, left=1, top=FIELDLENGTH+2, max_rows=100, width=MAXCOL)
+    ub = Up_blob(-1, UP_LEFTSTICK, UP_BOTTOMSTICK, left=1, top=FIELDLENGTH+2, max_rows=100, width=MAXCOL)
+    pyg.time.set_timer(MAIN_BLOB_MOVE_EVENT, MAIN_BLOB_SPEED)
+    pyg.time.set_timer(UP_BLOB_MOVE_EVENT, UP_BLOB_SPEED)
 
     cursor = Point()
     shooter = Gun()
@@ -82,8 +84,6 @@ def play(screen):
         elif event.type == pyg.KEYDOWN:
             if event.key == pyg.K_ESCAPE:  # end program
                 exit()
-        #    if event.key == pyg.K_DOWN:  # for manual testing
-        #        main_blob.move()
             elif event.key == pyg.K_SPACE:  # pause game
                 pause_game()
         elif event.type == pyg.MOUSEBUTTONDOWN:
@@ -93,11 +93,12 @@ def play(screen):
         elif event.type == MAIN_BLOB_MOVE_EVENT:
             if not mb.move():
                 pyg.event.post(pyg.event.Event(LOSE_EVENT))
-                pyg.time.set_timer(MAIN_BLOB_MOVE_EVENT, 0)
+        elif event.type == UP_BLOB_MOVE_EVENT:
             ub = ub.move()
-
         elif event.type == LOSE_EVENT:
             print('Game over')
+            pyg.time.set_timer(MAIN_BLOB_MOVE_EVENT, 0)
+            pyg.time.set_timer(UP_BLOB_MOVE_EVENT, 0)
 
         # Draws everything
         ALL_SPRITES.clear(screen, bg.image)
