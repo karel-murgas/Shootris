@@ -62,14 +62,18 @@ LAYER_UP = 2
 LAYER_MAIN = 1  # most hidden
 
 # Sound #
-sound_game_over = pyg.mixer.Sound('sound/game_over.wav')
-sound_win = pyg.mixer.Sound('sound/win.wav')
-sound_bgm = pyg.mixer.Sound('sound/background.wav')
-sound_hit_success = pyg.mixer.Sound('sound/hit_success.wav')
-sound_hit_fail = pyg.mixer.Sound('sound/hit_fail.wav')  # a little bit louder would be better
-sound_reload = pyg.mixer.Sound('sound/reload.ogg')
-sound_miss = pyg.mixer.Sound('sound/miss.wav')
-sound_empty = pyg.mixer.Sound('sound/empty.wav')
+SOUND = {
+    # Game sounds
+    'game_over': pyg.mixer.Sound('sound/game_over.wav'),
+    'win': pyg.mixer.Sound('sound/win.wav'),
+    'bg_music': pyg.mixer.Sound('sound/background.wav'),
+    # Shooting effects
+    'hit_success': pyg.mixer.Sound('sound/hit_success.wav'),
+    'hit_fail': pyg.mixer.Sound('sound/hit_fail.wav'),  # a little bit louder would be better
+    'reload': pyg.mixer.Sound('sound/reload.ogg'),
+    'miss': pyg.mixer.Sound('sound/miss.wav'),
+    'empty': pyg.mixer.Sound('sound/empty.wav')
+}
 
 # Texts #
 TEXT_STARTGAME = 'CLICK HERE or press SPACE'
@@ -107,11 +111,11 @@ INFOWIDTH = 16  # how wide will info filed be
 
 # Sound #
 SOUND_EFFECTS_ON = True
-SOUND_BGM_ON = False
+SOUND_BGM_ON = True
 
 # Gameplay #
 MAXCOLORS = 5  # how many of defined colors will be used
-MAXROW = 100  # how many lines will be generated per game
+MAXROW = 20  # how many lines will be generated per game
 MAXCOL = 15  # width of game field
 MAXAMMO = 5  # length of magazine
 LEFTSTICK = 0.7  # probability of taking color from left cell

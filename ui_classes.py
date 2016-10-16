@@ -27,23 +27,33 @@ from classes import *
 # Classes definitions #
 #######################
 
+class Infopanel():
+    """For information manipulation and displaying"""
+
+    def __init__(self, screen, left=INFO_LEFT, top=1, width=INFOWIDTH, height=FIELDLENGTH):
+        self.magazine = Magazine(screen, l_shift=1, top=top+1, height=2)
+        self.score = Label(screen, l_shift=1, top=top+5, pre_text='Score: ', width=width, height=height, info_left=left)
+
+
 class Label:
     """Texts and other informative user interface stuff"""
 
-    def __init__(self, screen, l_shift, top, width=INFOWIDTH, height=1, info_left=INFO_LEFT):
+    def __init__(self, screen, l_shift, top, pre_text='', width=INFOWIDTH, height=1, info_left=INFO_LEFT):
         self.left = l_shift + info_left
         self.top = top
         self.width = width - l_shift
         self.height = height
-        self.rect = pyg.Rect(self.left * CS, self.top * CS, self.width * CS, self.height)
+        self.rect = pyg.Rect(self.left * CS, self.top * CS, self.width * CS, self.height * CS)
         self.screen = screen
+        self.pre_text = pre_text
 
     def write(self, text='', color=WHITE, font_size=CS):
+        text_full = self.pre_text + str(text)
         font = pyg.font.SysFont(pyg.font.get_default_font(), font_size)
         surf_size = (self.width * CS, self.height * CS)
         surf_start = (self.left * CS, self.top * CS)
         self.screen.blit(pyg.Surface(surf_size), surf_start)  # clear the area
-        self.screen.blit(font.render(text, 1, color), surf_start)  # write in the area
+        self.screen.blit(font.render(text_full, 1, color), surf_start)  # write in the area
 
     def draw(self, surf, l_shift=0, t_shift=0):
         self.screen.blit(surf, ((self.left + l_shift) * CS, (self.top + t_shift) * CS))
@@ -54,6 +64,7 @@ class Magazine(Label):
 
     def __init__(self, screen, l_shift=1, top=2, height=2):
         Label.__init__(self, screen, l_shift, top, height=height)
+        self.show_ammo([])
 
     def show_ammo(self, magazine):
         self.draw(pyg.Surface((self.width * CS, self.height * CS)), 0, 0)

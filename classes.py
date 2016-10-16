@@ -184,6 +184,8 @@ class Blob(pyg.sprite.RenderUpdates):
         """Kill cells in iterative variable, count score, reveal background, check winning"""
 
         score = 0
+        # TODO: When called for first time, this cycle freezes the game for a short while. I have no idea why.
+        # If I leave only adding score, it is still broken. Even for low number of cells
         for c in cells:
             if reveal and background:
                 background.reveal(c.rect)
@@ -289,8 +291,10 @@ class Background:
         self.image.blit(self.load_image(path, theme, pic, source), area)
         self.img_area = area
         self.screen = screen
+        self.redraw(self.clear)  # clear gamefield
 
     def load_image(self, path, theme, pic, source):
+        """Load background image - randomly or with given theme / picture"""
         if theme == 'random':
             theme = rnd.choice(list(source))
         if pic == 'random':
@@ -298,14 +302,20 @@ class Background:
         return pyg.image.load(path + '/' + theme + '/' + source[theme][pic])
 
     def reveal(self, rect):
+        """Reveal background in the area of destroyed cells"""
         self.act.blit(self.image, rect, rect)
 
     def fade_in(self, group=ALL_SPRITES):
-        self.screen.blit(self.image, (0, 0))
-        group.draw(self.screen)
+        """At the end of won game show background image"""
+        self.redraw(self.image, group)
 
     def fade_out(self, group=ALL_SPRITES):
-        self.screen.blit(self.clear, (0, 0))
+        """At the end of lost game hide background image"""
+        self.redraw(self.clear, group)
+
+    def redraw(self, img, group=ALL_SPRITES):
+        """Change background without covering sprites"""
+        self.screen.blit(img, (0, 0))
         group.draw(self.screen)
 
 
@@ -356,7 +366,7 @@ class Gun:
                     if mb_hit.color == bullet:  # hit right color
                         upkill = self.explode(mb, ub, deadpool, deque([mb_hit]), bullet)
                         score += mb.ready_to_die(iter(deadpool), True, background)
-                        status = 'hit_successful'
+                        status = 'hit_success'
                     else:  # hit wrong color
                         status = 'hit_fail'
                 else:  # missed everything
@@ -373,13 +383,14 @@ class Gun:
                 neighbours_to_die = set([cell for cell in mb_neighbours if cell.color == bullet])
                 mb_to_die |= neighbours_to_die
                 self.explode(mb, ub, deadpool, deque(mb_to_die), bullet)
-                score += mb.ready_to_die(iter(deadpool), True, background)
-                status = 'hit_successful'
+                if len(deadpool) > 0:
+                    score += mb.ready_to_die(iter(deadpool), True, background)
+                status = 'hit_success'
         else:
             status = 'empty'
 
         # Check for winning
-        if status == 'hit_successful' and mb.max_rows == mb.generated_rows and len(mb.sprites()) == 0:  # mb is destroyed
+        if status == 'hit_success' and mb.max_rows == mb.generated_rows and len(mb.sprites()) == 0:  # mb is destroyed
             win = True
         else:
             win = False
@@ -397,6 +408,6 @@ class Gun:
         if len(self.magazine) > 1:
             bullet = self.magazine.popleft()
             self.magazine.append(bullet)
-            return 'changed'
+            return 'reload'
         else:
             return 'empty'

@@ -57,27 +57,32 @@ def pause_game():
                 exit()
 
 
-def play(screen):
+def play(screen, clock):
     """Runs the main loop with game"""
 
-    bg = Background(screen, MAXCOL + 2, FIELDLENGTH + 2, theme='cats', size=CS)
-    if SOUND_BGM_ON:
-        sound_bgm.play(loops=-1)
+    # Game initialization #
 
-    clock = pyg.time.Clock()
-
-    mb = Blob(1, LEFTSTICK, BOTTOMSTICK, left=1, top=0, max_rows=MAXROW)
-    ub = UpBlob(-2, UP_LEFTSTICK, UP_BOTTOMSTICK, left=1, top=FIELDLENGTH+2, max_rows=100, width=MAXCOL)
-    deadpool = pyg.sprite.Group()
+    # Events
     pyg.time.set_timer(MAIN_BLOB_MOVE_EVENT, MAIN_BLOB_SPEED)
     pyg.time.set_timer(UP_BLOB_MOVE_EVENT, UP_BLOB_SPEED)
     pyg.time.set_timer(ADD_AMMO_EVENT, ADD_AMMO_SPEED)
 
+    # Game objects
+    mb = Blob(1, LEFTSTICK, BOTTOMSTICK, left=1, top=0, max_rows=MAXROW)
+    ub = UpBlob(-2, UP_LEFTSTICK, UP_BOTTOMSTICK, left=1, top=FIELDLENGTH+2, max_rows=100, width=MAXCOL)
+    deadpool = pyg.sprite.Group()
     cursor = Point()
     shooter = Gun(maxammo=6)
-    ammo_display = Magazine(screen, 1, 2)
-    score_display = Label(screen, 1, 6)
+
+    # Sound
+    if SOUND_BGM_ON:
+        SOUND['bg_music'].play(loops=-1)
+
+    # Display
+    bg = Background(screen, MAXCOL + 2, FIELDLENGTH + 2, theme='cats', size=CS)
+    display = Infopanel(screen, INFO_LEFT, 1, INFOWIDTH, FIELDLENGTH)
     score = 0
+    display.score.write(score)
 
     # Main cycle #
     waiting = True
@@ -95,17 +100,18 @@ def play(screen):
         elif event.type == pyg.MOUSEBUTTONDOWN:
             if event.button == 1 and GAME_FIELD.collidepoint(pyg.mouse.get_pos()):  # shoot the gamefield
                 cursor.update(event.pos)
-                sc, status, win = shooter.shoot(cursor, mb, ub, deadpool, bg)
-                ammo_display.show_ammo(shooter.magazine)
+                sc, status, win = shooter.shoot(cursor, mb, ub, deadpool, bg)  # test hit
+                display.magazine.show_ammo(shooter.magazine)
                 if sc > 0:  # got some points
                     score += sc
-                    score_display.write('Score: ' + str(score))
-                    # TODO: Sounds depending on status
+                    display.score.write(score)
+                if SOUND_EFFECTS_ON and SOUND[status]:  # sound ON and effect is defined
+                    SOUND[status].play()
                 if win:  # won
                     pyg.event.post(pyg.event.Event(WIN_EVENT))
             if event.button == 3:
-                if shooter.change_ammo() == 'changed':
-                    ammo_display.show_ammo(shooter.magazine)
+                if shooter.change_ammo() == 'reload':
+                    display.magazine.show_ammo(shooter.magazine)
 
         # Timed events
         elif event.type == MAIN_BLOB_MOVE_EVENT:
@@ -115,22 +121,24 @@ def play(screen):
             ub = ub.move()
         elif event.type == ADD_AMMO_EVENT:
             if shooter.add_ammo() == 'added':
-                ammo_display.show_ammo(shooter.magazine)
+                display.magazine.show_ammo(shooter.magazine)
 
         # Special events
         elif event.type == LOSE_EVENT:
+            SOUND['bg_music'].stop()
+            if SOUND_EFFECTS_ON:
+                SOUND['game_over'].play()
             print('Game over')
-            pyg.time.set_timer(MAIN_BLOB_MOVE_EVENT, 0)
-            pyg.time.set_timer(UP_BLOB_MOVE_EVENT, 0)
-            pyg.time.set_timer(ADD_AMMO_EVENT, 0)
             bg.fade_out(ALL_SPRITES)
+            waiting = False
         elif event.type == WIN_EVENT:
-            pyg.time.set_timer(MAIN_BLOB_MOVE_EVENT, 0)
-            pyg.time.set_timer(UP_BLOB_MOVE_EVENT, 0)
-            pyg.time.set_timer(ADD_AMMO_EVENT, 0)
+            SOUND['bg_music'].stop()
+            if SOUND_EFFECTS_ON:
+                SOUND['win'].play()
+            print('You won')
             ub.reset()
             bg.fade_in(ALL_SPRITES)
-            print('You won')
+            waiting = False
 
         # Draws everything
         ALL_SPRITES.clear(screen, bg.act)
@@ -138,6 +146,12 @@ def play(screen):
         pyg.display.update()
         clock.tick(60)  # max 60 fps
 
+    # Game ended
+    ALL_SPRITES.empty()
+    ALL_SPRITES.add(wall.sprites(), layer=LAYER_WALL)
+    pyg.time.set_timer(MAIN_BLOB_MOVE_EVENT, 0)
+    pyg.time.set_timer(UP_BLOB_MOVE_EVENT, 0)
+    pyg.time.set_timer(ADD_AMMO_EVENT, 0)
 
 ################
 # Main program #
@@ -150,6 +164,7 @@ wall = Wall()
 wall.create_wall(0, 0, width=MAXCOL, height=FIELDLENGTH, image=WALL_IMG, color=WHITE, size=CS)
 wall.draw(screen)
 pyg.display.update()
+clock = pyg.time.Clock()
 
 # waiting for starting a game #
 waiting = True
@@ -162,8 +177,13 @@ while waiting:
         if event.key == pyg.K_ESCAPE:
             exit()
         elif event.key == pyg.K_SPACE:
-            play(screen)
+            play(screen, clock)
     elif event.type == pyg.MOUSEBUTTONDOWN:
         if event.button == 1 or event.button == 3:
             if INFO_FIELD.collidepoint(pyg.mouse.get_pos()):
-                play(screen)
+                play(screen, clock)
+
+    # Draw everything
+    pyg.display.update()
+    clock.tick(60)  # max 60 fps
+

@@ -1,6 +1,6 @@
 TODO:
 * Clean up code
-* When destroying cell, brighter flash fo a moment (50ms?)
+* When destroying cell, brighter flash for a moment (50ms?)
 * Frame upgoing blob (not individual cells) 
 * Universal ammo
 * Ammo of two colors
@@ -10,6 +10,7 @@ TODO:
 
 Fails:
 Exe file - I need a help with this! (Python 3.5, Pyinstaller doesn't work (even when commenting out the pictures) - it creates exe, which crashes to desktop)
+First successful shot lags the game. I have no idea why.
 
 
 Code cleaning ideas:
@@ -24,11 +25,10 @@ Code cleaning ideas:
 * At win - background will fade in to full picture
 
 Next steps:
-1) Why does the first shot lag? (Probably background?); sometimes it doesn't shoot?
-2) Start new game
-3) UI - progress bar (rows_generated / max_row)
-4) Sound
-5) Fade in/ou
+* Start new game
+* UI - progress bar (rows_generated / max_row)
+* Fade in/out
+* Move background to UI file
 
 
 Deadpool:
