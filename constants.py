@@ -87,18 +87,24 @@ TEXT_LOST = 'GAME OVER'
 TEXT_INSTRUCTIONS = 'LEFT shoot, RIGHT change'
 TIPS = [
     'New row is based on the row below it',
-    'Right click moves first color to the end',
+    'Right click moves first color in the magazine to the end',
     'You can pause the game with SPACE',
     'The game can be beated, it is not endless',
     'Highscore lasts only for current session',
-    'Game starts by clicking right half of screen',
+    'Game starts by clicking anywhere in right half of screen',
     'Full magazine will not get new colors',
     'ESCAPE will end the game instantly',
     'Up-going blob will destroy covered cells if shot',
-    'Up-going blob respawns after it\'s destruction',
+    'Shoot up-going blob to spawn new',
     'If you win, whole background will uncover',
-    'Up-going blob does not uncover background',
-    'You gain one point for every destroyed cell'
+    'You have to win to enjoy view of backgroung'
+    'Shooting up-going blob does not uncover background',
+    'You gain one point for any destroyed cell',
+    'Up-going blobs are perfect for destroying lonely cells',
+    'Progress shows how many rows were already spawned',
+    'To beat the game destroy all down-going cells',
+    'Up-going cells can hit the ceiling, it\'s OK',
+    'You lose if any cell from top hits the bottom'
 ]
 
 # Gameplay #
