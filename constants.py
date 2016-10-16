@@ -40,16 +40,19 @@ pyg.init()
 # Visual #
 RED = (128, 0, 0)
 GREEN = (0, 128, 0)
-BLUE = (0, 0, 128)
+BLUE = (0, 128, 128)
 WHITE = (255, 255, 255)
 YELLOW = (128, 128, 0)
 PINK = (128, 0, 128)
 BLACK = (0, 0, 0)
 UP_BLOB_ALPHA = 192
 CS = 30
-IMG_PATH = 'images'
-WALL_IMG = 'texture_squares_big_black.gif'
-UP_IMG = 'texture_squares_big_white.gif'
+BG_IMG_FOLD = 'backgrounds/'
+TEXT_IMG_FOLD = 'textures/'
+IMG_FOLD = 'images/'
+WALL_IMG = 'squares_big_black.gif'
+BLOB_IMG = 'squares_many_black.gif'
+UP_IMG = 'squares_big_white.gif'
 BACKGROUNDS = {
     'girls': ['bed.jpg', 'blond.jpg', 'bent.jpg'],
     'cats': ['double.jpg', 'white.jpg', 'beige.jpg']
@@ -100,7 +103,7 @@ TIPS_EVENT = pyg.USEREVENT + 7
 
 # Screen #
 FIELDLENGTH = 25  # how long will game field be, also defines screen height
-INFOWIDTH = 13  # how wide will info filed be
+INFOWIDTH = 16  # how wide will info filed be
 
 # Sound #
 SOUND_EFFECTS_ON = True
@@ -118,8 +121,8 @@ UP_BOTTOMSTICK = 0.75
 
 # Frequencies #
 ADD_AMMO_SPEED = 1500
-MAIN_BLOB_SPEED = 100
-UP_BLOB_SPEED = 25
+MAIN_BLOB_SPEED = 90
+UP_BLOB_SPEED = 40
 TEXT_FLESH_TIME = 500
 TIPS_TIME = 8000
 

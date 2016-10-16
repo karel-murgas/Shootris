@@ -60,8 +60,9 @@ def get_random_color(colors=COLORS, stop=MAXCOLORS):
     """Returns random color from list, list can be shortened"""
     return colors[rnd.randrange(stop)]
 
-#
-def get_random_tip(tips=TIPS, forbidden = -1):
+
+# still unused
+def get_random_tip(tips=TIPS, forbidden=-1):
     """Returns random tip from list, it can omit previous tip"""
     num = rnd.randrange(len(tips))  # if forbidden, take next (cycle through)
     if num == forbidden:

@@ -32,14 +32,14 @@ def init_screen():
     """Gets the screen ready and draws environment"""
     total_width = (MAXCOL + INFOWIDTH + 2)  # game field width + info field width + walls
     total_height = (FIELDLENGTH + 2)  # game field height + 2
-    pyg.display.set_icon(pyg.image.load(IMG_PATH + '/icon_crosshair.gif'))
+    pyg.display.set_icon(pyg.image.load(IMG_FOLD + 'icon_crosshair.gif'))
     screen_ = pyg.display.set_mode((total_width * CS, total_height * CS))
     pyg.display.set_caption('Shootris')
 #    for r in range(FIELDLENGTH):
 #        draw_cell(screen_, r, MAXCOL, WHITE)
     pyg.display.update()
-    pyg.mouse.set_cursor(*pyg.cursors.load_xbm(IMG_PATH + '/cursor_crosshair.xbm',
-                                               IMG_PATH + '/cursor_crosshair-mask.xbm'))
+    pyg.mouse.set_cursor(*pyg.cursors.load_xbm(IMG_FOLD + 'cursor_crosshair.xbm',
+                                               IMG_FOLD + 'cursor_crosshair-mask.xbm'))
     return screen_
 
 
@@ -67,14 +67,14 @@ def play(screen):
     clock = pyg.time.Clock()
 
     mb = Blob(1, LEFTSTICK, BOTTOMSTICK, left=1, top=0, max_rows=MAXROW)
-    ub = UpBlob(-1, UP_LEFTSTICK, UP_BOTTOMSTICK, left=1, top=FIELDLENGTH+2, max_rows=100, width=MAXCOL)
+    ub = UpBlob(-2, UP_LEFTSTICK, UP_BOTTOMSTICK, left=1, top=FIELDLENGTH+2, max_rows=100, width=MAXCOL)
     deadpool = pyg.sprite.Group()
     pyg.time.set_timer(MAIN_BLOB_MOVE_EVENT, MAIN_BLOB_SPEED)
     pyg.time.set_timer(UP_BLOB_MOVE_EVENT, UP_BLOB_SPEED)
     pyg.time.set_timer(ADD_AMMO_EVENT, ADD_AMMO_SPEED)
 
     cursor = Point()
-    shooter = Gun()
+    shooter = Gun(maxammo=6)
     ammo_display = Magazine(screen, 1, 2)
     score_display = Label(screen, 1, 6)
     score = 0

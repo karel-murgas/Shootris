@@ -94,9 +94,9 @@ class Cell(pyg.sprite.Sprite):
         self.image.fill(color)
         self.color = color
 
-    def load_image(self, image, path=IMG_PATH):
+    def load_image(self, image, path=IMG_FOLD+TEXT_IMG_FOLD):
         """Load image with given path into this cell"""
-        img = pyg.image.load(path + '/' + image)
+        img = pyg.image.load(path + image)
         self.image.blit(img, (0, 0))
 
 
@@ -131,6 +131,7 @@ class Blob(pyg.sprite.RenderUpdates):
 
     def generate_cell_color(self, cell):
         """Generate color with regards to other cells in blob"""
+
         if roll(self.l_prob) and cell.col > 0 and self.matrix[cell.row][cell.col - 1] is not None:
             color = self.matrix[cell.row][cell.col - 1].color
         elif roll(self.b_prob) and cell.row > 0 and self.matrix[cell.row - 1][cell.col] is not None:
@@ -141,6 +142,7 @@ class Blob(pyg.sprite.RenderUpdates):
 
     def generate_cell(self, left, top, col, row, size=CS, alpha=255, image=None):
         """Generate new cell for the blob, called by ad_row method"""
+
         where = pyg.Surface((size, size))
         cell = Cell(where, left * size, top * size, col, row, self.layer, alpha)
         cell.colorate(self.generate_cell_color(cell))
@@ -150,6 +152,7 @@ class Blob(pyg.sprite.RenderUpdates):
 
     def add_row(self, image=None):
         """Ad new row into the blob and fill it with cels"""
+
         self.matrix.append([])
         for i in range(self.left, self.max_cols + self.left):
             cell = self.generate_cell(i, self.top, i - self.left, self.generated_rows, image=image)
@@ -158,6 +161,7 @@ class Blob(pyg.sprite.RenderUpdates):
         self.generated_rows += 1
 
     def test_destroy(self):
+
         """If any cell is at bottom of game field, return true"""
         for cell in iter(self):
             if cell.rect.top == FIELDLENGTH * CS:
@@ -166,8 +170,9 @@ class Blob(pyg.sprite.RenderUpdates):
 
     def move(self):
         """Move the blob. If it is needed, generate new row. If game should end, return False."""
+
         if self.offset == 0 and self.generated_rows < self.max_rows:  # when the time is right, add new row
-            self.add_row()
+            self.add_row(image=BLOB_IMG)
         self.update(self.direction)  # update cells
         self.offset = (self.offset + self.direction) % CS
         if self.offset == 0:
@@ -227,6 +232,8 @@ class UpBlob(Blob):
             return True
 
     def reset(self):
+        for cell in iter(self):
+            cell.kill()
         return UpBlob(self.direction, self.l_prob, self.b_prob, self.left, self.top, self.layer, self.max_rows_orig,
                       self.width)
 
@@ -274,7 +281,8 @@ class Wall(pyg.sprite.Group):
 class Background:
     """Background image and it's properties"""
 
-    def __init__(self, screen, width, height, area=GAME_FIELD, theme='random', pic='random', source=BACKGROUNDS, path=IMG_PATH, size=CS):
+    def __init__(self, screen, width, height, area=GAME_FIELD, theme='random', pic='random', source=BACKGROUNDS,
+                 path=IMG_FOLD+BG_IMG_FOLD, size=CS):
         self.clear = pyg.Surface((width * size, height * size))
         self.act = pyg.Surface((width * size, height * size))
         self.image = pyg.Surface((width * size, height * size))

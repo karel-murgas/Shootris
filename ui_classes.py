@@ -53,7 +53,7 @@ class Magazine(Label):
     """Displays status of magazine"""
 
     def __init__(self, screen, l_shift=1, top=2, height=2):
-        Label.__init__(self, screen, l_shift, top, height=2)
+        Label.__init__(self, screen, l_shift, top, height=height)
 
     def show_ammo(self, magazine):
         self.draw(pyg.Surface((self.width * CS, self.height * CS)), 0, 0)
