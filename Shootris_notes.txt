@@ -1,36 +1,33 @@
+Next steps:
+* UI + progress bar (rows_generated / max_row)
+** Progeress bar
+** Highscore
+** More tips
+* Background fade in/out in steps
+* Move Background class to UI file
+* Turn on / off sound by pressing s
+
+
 TODO:
 * Clean up code
 * When destroying cell, brighter flash for a moment (50ms?)
 * Universal ammo
 * Ammo of two colors
 * Setting & difficulties (menu)
-* Allow adding new backgrounds and themes just by copiing them
+* Allow adding new backgrounds and themes just by copiing them into folder
 * Center background (if size does not fit)
 * Handle potential errors
-
-
-Fails:
-* Exe file - I need a help with this! (Python 3.5, Pyinstaller doesn't work (even when commenting out the pictures) - it creates exe, which crashes to desktop)
-* First successful shot lags the game. I have no idea why.
-
-
-Code cleaning ideas:
-* Lables as instances of class
-** Name, positon (top), flashing (time, status), rect
-** Flashing effect, writing
-
-Next steps:
-* UI + progress bar (rows_generated / max_row)
-** Progeress bar
-** Highscore
-* Background fade in/out in steps
-* Move Background class to UI file
 
 
 Deadpool:
 * Each cell has lifetime
 * If lifetime <= 0 -> kill it
 * Else - update color
+
+
+Fails:
+* Exe file - I need a help with this! (Python 3.5, Pyinstaller doesn't work (even when commenting out the pictures) - it creates exe, which crashes to desktop)
+* First successful shot lags the game. I have no idea why.
 
 
 

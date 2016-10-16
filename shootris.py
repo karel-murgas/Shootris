@@ -74,7 +74,7 @@ def pause_game(display, clock):
     display.status.write(TEXT_INSTRUCTIONS)
 
 
-def play(screen, display, clock):
+def play(screen, display, clock, highscore):
     """Runs the main loop with game"""
 
     # Game initialization #
@@ -99,6 +99,8 @@ def play(screen, display, clock):
     bg = Background(screen, MAXCOL + 2, FIELDLENGTH + 2, theme='cats', size=CS)
     score = 0
     display.score.write(score)
+    print('Ingame', highscore)
+    display.highscore.write(highscore)
     display.action.write('')  # Clears action area of display
     display.status.write(TEXT_INSTRUCTIONS)
 
@@ -122,7 +124,10 @@ def play(screen, display, clock):
                 display.magazine.show_ammo(shooter.magazine)
                 if sc > 0:  # got some points
                     score += sc
-                    display.score.write(score)
+                    if score < highscore:
+                        display.score.write(score, color=WHITE)
+                    else:
+                        display.score.write(score, color=GREEN)
                 if SOUND_EFFECTS_ON and SOUND[status]:  # sound ON and effect is defined
                     SOUND[status].play()
                 if win:  # won
@@ -175,6 +180,9 @@ def play(screen, display, clock):
     pyg.time.set_timer(UP_BLOB_MOVE_EVENT, 0)
     pyg.time.set_timer(ADD_AMMO_EVENT, 0)
 
+    return(score)
+
+
 ################
 # Main program #
 ################
@@ -194,6 +202,7 @@ display.status.write(TEXT_WELCOME)
 
 pyg.time.set_timer(TIPS_EVENT, TIPS_TIME)
 pyg.time.set_timer(BLINK_EVENT, BLINK_TIME)
+highscore = 0
 
 # waiting for starting a game #
 waiting = True
@@ -206,12 +215,14 @@ while waiting:
     elif event.type == pyg.KEYDOWN:
         if event.key == pyg.K_ESCAPE:
             exit()
-        elif event.key == pyg.K_SPACE:
-            play(screen, display, clock)
+        elif event.key == pyg.K_SPACE:  # start game
+            highscore = max(highscore, play(screen, display, clock, highscore))
+            print('After game', highscore)
     elif event.type == pyg.MOUSEBUTTONDOWN:
-        if event.button == 1 or event.button == 3:
+        if event.button == 1 or event.button == 3:  # start game
             if INFO_FIELD.collidepoint(pyg.mouse.get_pos()):
-                play(screen, display, clock)
+                highscore = max(highscore, play(screen, display, clock, highscore))
+                print('After game', highscore)
 
     # Autoevents
     elif event.type == BLINK_EVENT:
