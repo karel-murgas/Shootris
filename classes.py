@@ -280,45 +280,6 @@ class Wall(pyg.sprite.Group):
             self.add(self.generate_cell(left, top + j + 1, image, color, size))
 
 
-class Background:
-    """Background image and it's properties"""
-
-    def __init__(self, screen, width, height, area=GAME_FIELD, theme='random', pic='random', source=BACKGROUNDS,
-                 path=IMG_FOLD+BG_IMG_FOLD, size=CS):
-        self.clear = pyg.Surface((width * size, height * size))
-        self.act = pyg.Surface((width * size, height * size))
-        self.image = pyg.Surface((width * size, height * size))
-        self.image.blit(self.load_image(path, theme, pic, source), area)
-        self.img_area = area
-        self.screen = screen
-        self.redraw(self.clear)  # clear gamefield
-
-    def load_image(self, path, theme, pic, source):
-        """Load background image - randomly or with given theme / picture"""
-        if theme == 'random':
-            theme = rnd.choice(list(source))
-        if pic == 'random':
-            pic = rnd.randrange(len(source[theme]))
-        return pyg.image.load(path + '/' + theme + '/' + source[theme][pic])
-
-    def reveal(self, rect):
-        """Reveal background in the area of destroyed cells"""
-        self.act.blit(self.image, rect, rect)
-
-    def fade_in(self, group=ALL_SPRITES):
-        """At the end of won game show background image"""
-        self.redraw(self.image, group)
-
-    def fade_out(self, group=ALL_SPRITES):
-        """At the end of lost game hide background image"""
-        self.redraw(self.clear, group)
-
-    def redraw(self, img, group=ALL_SPRITES):
-        """Change background without covering sprites"""
-        self.screen.blit(img, (0, 0))
-        group.draw(self.screen)
-
-
 class Gun:
     """Define attributes and methods used for shooting"""
 
@@ -354,6 +315,7 @@ class Gun:
 
             # Hit upgoing blob
             if up_hit:
+                print('b', bullet, 'c', ub.color)
                 if ub.color == bullet:  # hit right color
                     upkill = True
                 else:  # hit wrong color
@@ -363,6 +325,7 @@ class Gun:
 
                 # Hit main blob
                 if mb_hit:
+                    print('b', bullet, 'c', mb_hit.color)
                     if mb_hit.color == bullet:  # hit right color
                         upkill = self.explode(mb, ub, deadpool, deque([mb_hit]), bullet)
                         score += mb.ready_to_die(iter(deadpool), True, background)

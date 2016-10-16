@@ -1,10 +1,7 @@
 Next steps:
-* UI + progress bar (rows_generated / max_row)
-** Progeress bar
-** Highscore
-** More tips
-* Background fade in/out in steps
-* Move Background class to UI file
+* Background fade in/out in steps - fix it
+* Find bug when sometimes right hit returns hit_fail
+* Kill upblob cells out of gamefiled (instead of waiting for last one to be out)
 * Turn on / off sound by pressing s
 
 

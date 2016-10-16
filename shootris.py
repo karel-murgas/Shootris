@@ -98,10 +98,12 @@ def play(screen, display, clock, highscore):
     # Display
     bg = Background(screen, MAXCOL + 2, FIELDLENGTH + 2, theme='girls', size=CS)
     score = 0
+    display.magazine.show_ammo(shooter.magazine)
     display.score.write(score)
     display.highscore.write(highscore)
     display.action.write('')  # Clears action area of display
     display.status.write(TEXT_INSTRUCTIONS)
+    fade_step = 0
 
     # Main cycle #
     waiting = True
@@ -130,7 +132,7 @@ def play(screen, display, clock, highscore):
                 if SOUND_EFFECTS_ON and SOUND[status]:  # sound ON and effect is defined
                     SOUND[status].play()
                 if win:  # won
-                    pyg.event.post(pyg.event.Event(WIN_EVENT))
+                    pyg.event.post(pyg.event.Event(END_EVENT, {'status': 'win'}))
             if event.button == 3:
                 if shooter.change_ammo() == 'reload':
                     display.magazine.show_ammo(shooter.magazine)
@@ -142,7 +144,7 @@ def play(screen, display, clock, highscore):
         # Timed events
         elif event.type == MAIN_BLOB_MOVE_EVENT:
             if not mb.move():
-                pyg.event.post(pyg.event.Event(LOSE_EVENT))
+                pyg.event.post(pyg.event.Event(END_EVENT, {'status': 'game_over'}))
             display.progress.write(str(mb.generated_rows) + ' / ' + str(mb.max_rows))
         elif event.type == UP_BLOB_MOVE_EVENT:
             ub = ub.move()
@@ -151,34 +153,36 @@ def play(screen, display, clock, highscore):
                 display.magazine.show_ammo(shooter.magazine)
 
         # Special events
-        elif event.type == LOSE_EVENT:
+        elif event.type == END_EVENT:
+            pyg.time.set_timer(MAIN_BLOB_MOVE_EVENT, 0)
+            pyg.time.set_timer(UP_BLOB_MOVE_EVENT, 0)
+            pyg.time.set_timer(ADD_AMMO_EVENT, 0)
             SOUND['bg_music'].stop()
             if SOUND_EFFECTS_ON:
-                SOUND['game_over'].play()
-            display.status.write(TEXT_LOST)
-            bg.fade_out(ALL_SPRITES)
-            waiting = False
-        elif event.type == WIN_EVENT:
-            SOUND['bg_music'].stop()
-            if SOUND_EFFECTS_ON:
-                SOUND['win'].play()
-            display.status.write(TEXT_WON)
-            ub.reset()
-            bg.fade_in(ALL_SPRITES)
-            waiting = False
+                SOUND[event.status].play()
+            display.status.write(TEXT_WON) if event == 'win' else display.status.write(TEXT_LOST)
+            pyg.event.post(pyg.event.Event(FADE_EVENT))
+            fade = 'in' if event.status == 'win' else 'out'
+            if event.status == 'win':
+                ub.reset()
+            fade_step = 1
+        elif event.type == FADE_EVENT:
+            bg.fade(fade, fade_step, ALL_SPRITES)
+            if fade_step == 10:
+                waiting = False
+
 
         # Draws everything
-        ALL_SPRITES.clear(screen, bg.act)
-        ALL_SPRITES.draw(screen)
+        if fade_step == 0:  # if game still runs
+            ALL_SPRITES.clear(screen, bg.act)
+            ALL_SPRITES.draw(screen)
         pyg.display.update()
         clock.tick(60)  # max 60 fps
 
     # Game ended
     ALL_SPRITES.empty()
     ALL_SPRITES.add(wall.sprites(), layer=LAYER_WALL)
-    pyg.time.set_timer(MAIN_BLOB_MOVE_EVENT, 0)
-    pyg.time.set_timer(UP_BLOB_MOVE_EVENT, 0)
-    pyg.time.set_timer(ADD_AMMO_EVENT, 0)
+    pyg.time.set_timer(FADE_EVENT, 0)
 
     return(score)
 

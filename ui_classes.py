@@ -105,3 +105,47 @@ class Magazine(Label):
             bullet = pyg.Surface((2 * CS, 2 * CS))
             bullet.fill(col)
             self.draw(bullet, 2 * i, 0)
+
+
+class Background:
+    """Background image and it's properties"""
+
+    def __init__(self, screen, width, height, area=GAME_FIELD, theme='random', pic='random', source=BACKGROUNDS,
+                 path=IMG_FOLD+BG_IMG_FOLD, size=CS):
+        self.clear = pyg.Surface((width * size, height * size))
+        self.act = pyg.Surface((width * size, height * size))
+        self.image = pyg.Surface((width * size, height * size))
+        self.image.blit(self.load_image(path, theme, pic, source), area)
+        self.img_area = area
+        self.screen = screen
+        self.redraw(self.clear)  # clear gamefield
+
+    def load_image(self, path, theme, pic, source):
+        """Load background image - randomly or with given theme / picture"""
+
+        if theme == 'random':
+            theme = rnd.choice(list(source))
+        if pic == 'random':
+            pic = rnd.randrange(len(source[theme]))
+        return pyg.image.load(path + theme + '/' + source[theme][pic])
+
+    def reveal(self, rect):
+        """Reveal background in the area of destroyed cells"""
+
+        self.act.blit(self.image, rect, rect)
+
+    def fade(self, f_type, step, group=ALL_SPRITES):
+        """Draw background or image with alpha depending on fade step -> show or hide"""
+
+        if f_type == 'in':
+            image = self.image  # show
+        elif f_type =='out':
+            image = self.clear  # hide
+        image.set_alpha(step * 0.1)
+        self.redraw(self.image, group)
+
+    def redraw(self, img, group=ALL_SPRITES):
+        """Change background without covering sprites"""
+
+        self.screen.blit(img, (0, 0))
+        group.draw(self.screen)
