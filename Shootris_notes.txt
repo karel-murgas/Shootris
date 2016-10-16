@@ -1,16 +1,17 @@
 TODO:
 * Clean up code
 * When destroying cell, brighter flash for a moment (50ms?)
-* Frame upgoing blob (not individual cells) 
 * Universal ammo
 * Ammo of two colors
-* Setting & difficulties
+* Setting & difficulties (menu)
+* Allow adding new backgrounds and themes just by copiing them
+* Center background (if size does not fit)
 * Handle potential errors
 
 
 Fails:
-Exe file - I need a help with this! (Python 3.5, Pyinstaller doesn't work (even when commenting out the pictures) - it creates exe, which crashes to desktop)
-First successful shot lags the game. I have no idea why.
+* Exe file - I need a help with this! (Python 3.5, Pyinstaller doesn't work (even when commenting out the pictures) - it creates exe, which crashes to desktop)
+* First successful shot lags the game. I have no idea why.
 
 
 Code cleaning ideas:
@@ -18,26 +19,19 @@ Code cleaning ideas:
 ** Name, positon (top), flashing (time, status), rect
 ** Flashing effect, writing
 
-
-* It's possible to extend parent method! So I can extend kill() to do some cool effects! (define it as a new method + call parent method in it - Tobi's explosions will be possible
-* Background (used by clear) will start as black; when cell is killed, it blits rect of BGIMG to that surgace
-* At game over - background will fade into black
-* At win - background will fade in to full picture
-
 Next steps:
-* Start new game
-* UI - progress bar (rows_generated / max_row)
-* Fade in/out
-* Move background to UI file
+* UI + progress bar (rows_generated / max_row)
+** Progeress bar
+** Highscore
+* Background fade in/out in steps
+* Move Background class to UI file
 
 
 Deadpool:
-Each cell has lifetime
-If lifetime <= 0 -> kill it
-Else - update color
+* Each cell has lifetime
+* If lifetime <= 0 -> kill it
+* Else - update color
 
-
-* solve color - none with upblob - none with upblob - color chain (check neighbours while killing upblob? spread even through dead blobs if they are covered?)
 
 
 

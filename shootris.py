@@ -43,21 +43,38 @@ def init_screen():
     return screen_
 
 
-def pause_game():
+def pause_game(display, clock):
     """Pauses game until SPACE is pressed"""
+
+    display.status.write(TEXT_PAUSE_INFO)
 
     waiting = True
     while waiting:
+
+        # Player controls
         event = pyg.event.poll()
         if event.type == pyg.KEYDOWN:
             if event.key == pyg.K_SPACE:
-                #info.message_flash('')
                 waiting = False
             elif event.key == pyg.K_ESCAPE:
                 exit()
 
+        # Text events
+        elif event.type == BLINK_EVENT:
+            display.action.blink(TEXT_UNPAUSE)
+        elif event.type == TIPS_EVENT:
+            display.tips.change_text(TIPS)
 
-def play(screen, clock):
+        # Draw it + fps control
+        pyg.display.update()
+        clock.tick(60)  # max 60 fps
+
+    # Clear display
+    display.action.write('')  # Clears action area of display
+    display.status.write(TEXT_INSTRUCTIONS)
+
+
+def play(screen, display, clock):
     """Runs the main loop with game"""
 
     # Game initialization #
@@ -80,23 +97,24 @@ def play(screen, clock):
 
     # Display
     bg = Background(screen, MAXCOL + 2, FIELDLENGTH + 2, theme='cats', size=CS)
-    display = Infopanel(screen, INFO_LEFT, 1, INFOWIDTH, FIELDLENGTH)
     score = 0
     display.score.write(score)
+    display.action.write('')  # Clears action area of display
+    display.status.write(TEXT_INSTRUCTIONS)
 
     # Main cycle #
     waiting = True
     while waiting:
         event = pyg.event.poll()
 
-        # Controls
+        # Player controls
         if event.type == pyg.QUIT:  # end program
             exit()
         elif event.type == pyg.KEYDOWN:
             if event.key == pyg.K_ESCAPE:  # end program
                 exit()
             elif event.key == pyg.K_SPACE:  # pause game
-                pause_game()
+                pause_game(display, clock)
         elif event.type == pyg.MOUSEBUTTONDOWN:
             if event.button == 1 and GAME_FIELD.collidepoint(pyg.mouse.get_pos()):  # shoot the gamefield
                 cursor.update(event.pos)
@@ -113,6 +131,10 @@ def play(screen, clock):
                 if shooter.change_ammo() == 'reload':
                     display.magazine.show_ammo(shooter.magazine)
 
+        # Text events
+        elif event.type == TIPS_EVENT:
+            display.tips.change_text(TIPS)
+
         # Timed events
         elif event.type == MAIN_BLOB_MOVE_EVENT:
             if not mb.move():
@@ -128,14 +150,14 @@ def play(screen, clock):
             SOUND['bg_music'].stop()
             if SOUND_EFFECTS_ON:
                 SOUND['game_over'].play()
-            print('Game over')
+            display.status.write(TEXT_LOST)
             bg.fade_out(ALL_SPRITES)
             waiting = False
         elif event.type == WIN_EVENT:
             SOUND['bg_music'].stop()
             if SOUND_EFFECTS_ON:
                 SOUND['win'].play()
-            print('You won')
+            display.status.write(TEXT_WON)
             ub.reset()
             bg.fade_in(ALL_SPRITES)
             waiting = False
@@ -165,23 +187,37 @@ wall.create_wall(0, 0, width=MAXCOL, height=FIELDLENGTH, image=WALL_IMG, color=W
 wall.draw(screen)
 pyg.display.update()
 clock = pyg.time.Clock()
+display = Infopanel(screen, INFO_LEFT, 1, INFOWIDTH, FIELDLENGTH)
+display.tips_header.write(TEXT_TIPS_HEADER)
+display.tips.change_text(TIPS)
+display.status.write(TEXT_WELCOME)
+
+pyg.time.set_timer(TIPS_EVENT, TIPS_TIME)
+pyg.time.set_timer(BLINK_EVENT, BLINK_TIME)
 
 # waiting for starting a game #
 waiting = True
 while waiting:
     event = pyg.event.poll()
 
+    # Player controls
     if event.type == pyg.QUIT:
         exit()
     elif event.type == pyg.KEYDOWN:
         if event.key == pyg.K_ESCAPE:
             exit()
         elif event.key == pyg.K_SPACE:
-            play(screen, clock)
+            play(screen, display, clock)
     elif event.type == pyg.MOUSEBUTTONDOWN:
         if event.button == 1 or event.button == 3:
             if INFO_FIELD.collidepoint(pyg.mouse.get_pos()):
-                play(screen, clock)
+                play(screen, display, clock)
+
+    # Autoevents
+    elif event.type == BLINK_EVENT:
+        display.action.blink(TEXT_STARTGAME)
+    elif event.type == TIPS_EVENT:
+        display.tips.change_text(TIPS)
 
     # Draw everything
     pyg.display.update()

@@ -52,19 +52,20 @@ def collide_cell_touch(*args):
 
 
 def roll(prob):
-    """Tests random value [0,1) against given probability"""
+    """Test random value [0,1) against given probability"""
     return True if (rnd.random() < prob) else False
 
 
 def get_random_color(colors=COLORS, stop=MAXCOLORS):
-    """Returns random color from list, list can be shortened"""
+    """Return random color from list, list can be shortened"""
     return colors[rnd.randrange(stop)]
 
 
 # still unused
-def get_random_tip(tips=TIPS, forbidden=-1):
-    """Returns random tip from list, it can omit previous tip"""
-    num = rnd.randrange(len(tips))  # if forbidden, take next (cycle through)
-    if num == forbidden:
-        num = (num + 1) % len(tips)
-    return num, tips[num]
+def change_element(element=None, my_list=TIPS):
+    """Return random value of array if it's different from given element, else return next one"""
+
+    num = rnd.randrange(len(my_list))  # if forbidden, take next (cycle through)
+    if my_list[num] == element:
+        num = (num + 1) % len(my_list)
+    return my_list[num]

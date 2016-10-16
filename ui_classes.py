@@ -31,14 +31,18 @@ class Infopanel():
     """For information manipulation and displaying"""
 
     def __init__(self, screen, left=INFO_LEFT, top=1, width=INFOWIDTH, height=FIELDLENGTH):
-        self.magazine = Magazine(screen, l_shift=1, top=top+1, height=2)
-        self.score = Label(screen, l_shift=1, top=top+5, pre_text='Score: ', width=width, height=height, info_left=left)
+        self.magazine = Magazine(screen, top=top+1, height=2)
+        self.score = Label(screen, top=top+5, pre_text='Score: ')
+        self.status = Label(screen, top=top+height/2)
+        self.action = Label(screen, top=top+height/2+2)
+        self.tips_header = Label(screen, top=top+height/2+6)
+        self.tips = Label(screen, top=top+height/2+7, font_size=(4*CS)//5)
 
 
 class Label:
     """Texts and other informative user interface stuff"""
 
-    def __init__(self, screen, l_shift, top, pre_text='', width=INFOWIDTH, height=1, info_left=INFO_LEFT):
+    def __init__(self, screen, top, l_shift=1, pre_text='', width=INFOWIDTH, height=1, info_left=INFO_LEFT, font_size=CS):
         self.left = l_shift + info_left
         self.top = top
         self.width = width - l_shift
@@ -46,16 +50,36 @@ class Label:
         self.rect = pyg.Rect(self.left * CS, self.top * CS, self.width * CS, self.height * CS)
         self.screen = screen
         self.pre_text = pre_text
+        self.font_size = font_size
+        self.text = ''
+        self.visible = True
 
-    def write(self, text='', color=WHITE, font_size=CS):
+    def blink(self, text):
+        """If text is visible, hide it; if invisible, show it"""
+
+        if self.visible:
+            self.write('')
+        else:
+            self.write(text)
+        self.visible = not self.visible  # changes visibility
+
+    def change_text(self, source):
+        """Choose text from source which is different than current"""
+        text = change_element(self.text, source)
+        self.write(text)
+
+    def write(self, text='', color=WHITE):
+        """Write given text"""
+        self.text = text
         text_full = self.pre_text + str(text)
-        font = pyg.font.SysFont(pyg.font.get_default_font(), font_size)
+        font = pyg.font.SysFont(pyg.font.get_default_font(), self.font_size)
         surf_size = (self.width * CS, self.height * CS)
         surf_start = (self.left * CS, self.top * CS)
         self.screen.blit(pyg.Surface(surf_size), surf_start)  # clear the area
         self.screen.blit(font.render(text_full, 1, color), surf_start)  # write in the area
 
     def draw(self, surf, l_shift=0, t_shift=0):
+        """Draw given surface"""
         self.screen.blit(surf, ((self.left + l_shift) * CS, (self.top + t_shift) * CS))
 
 

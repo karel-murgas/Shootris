@@ -77,6 +77,13 @@ SOUND = {
 
 # Texts #
 TEXT_STARTGAME = 'CLICK HERE or press SPACE'
+TEXT_TIPS_HEADER = 'DID YOU KNOW?'
+TEXT_WELCOME = 'Welcome!'
+TEXT_PAUSE_INFO = 'The game is PAUSED'
+TEXT_UNPAUSE = 'Press SPACE to unpause'
+TEXT_WON = 'YOU WON! Congratulations.'
+TEXT_LOST = 'GAME OVER'
+TEXT_INSTRUCTIONS = 'LEFT shoot, RIGHT change'
 TIPS = [
     'New row is based on the row below it',
     'Right click moves first color to the end',
@@ -97,7 +104,7 @@ ADD_AMMO_EVENT = pyg.USEREVENT + 2
 LOSE_EVENT = pyg.USEREVENT + 3
 MAIN_BLOB_MOVE_EVENT = pyg.USEREVENT + 4
 UP_BLOB_MOVE_EVENT = pyg.USEREVENT + 5
-FLASH_EVENT = pyg.USEREVENT + 6
+BLINK_EVENT = pyg.USEREVENT + 6
 TIPS_EVENT = pyg.USEREVENT + 7
 
 
@@ -127,7 +134,7 @@ UP_BOTTOMSTICK = 0.75
 ADD_AMMO_SPEED = 1500
 MAIN_BLOB_SPEED = 90
 UP_BLOB_SPEED = 40
-TEXT_FLESH_TIME = 500
+BLINK_TIME = 500
 TIPS_TIME = 8000
 
 
