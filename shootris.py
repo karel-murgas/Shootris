@@ -161,16 +161,16 @@ def play(screen, display, clock, highscore):
             if SOUND_EFFECTS_ON:
                 SOUND[event.status].play()
             display.status.write(TEXT_WON) if event == 'win' else display.status.write(TEXT_LOST)
-            pyg.event.post(pyg.event.Event(FADE_EVENT))
+            pyg.time.set_timer(FADE_EVENT, FADE_SPEED)
             fade = 'in' if event.status == 'win' else 'out'
             if event.status == 'win':
                 ub.reset()
-            fade_step = 1
+            fade_step = 0
         elif event.type == FADE_EVENT:
-            bg.fade(fade, fade_step, ALL_SPRITES)
-            if fade_step == 10:
+            fade_step += 1
+            bg.fade(fade, fade_step, FADE_STEPS, ALL_SPRITES)
+            if fade_step == FADE_STEPS:
                 waiting = False
-
 
         # Draws everything
         if fade_step == 0:  # if game still runs

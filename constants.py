@@ -60,8 +60,7 @@ BACKGROUNDS = {
 LAYER_WALL = 3  # most visible
 LAYER_UP = 2
 LAYER_MAIN = 1  # most hidden
-
-FADE_SPEED = 300
+FADE_STEPS = 100
 
 # Sound #
 SOUND = {
@@ -153,3 +152,4 @@ GAME_FIELD = pyg.Rect(1 * CS, 1 * CS, MAXCOL * CS, FIELDLENGTH * CS)  # used for
 INFO_LEFT = MAXCOL + 2
 INFO_FIELD = pyg.Rect((MAXCOL + 2) * CS, 1 * CS, INFOWIDTH * CS, FIELDLENGTH * CS)  # used for interaction with info field
 ALL_SPRITES = pyg.sprite.LayeredUpdates()  # Group for updating gamefield
+FADE_SPEED = 3000 // FADE_STEPS

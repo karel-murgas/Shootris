@@ -1,6 +1,5 @@
 Next steps:
-* Background fade in/out in steps - fix it
-* Find bug when sometimes right hit returns hit_fail
+* Find bug when sometimes right hit returns hit_fail - maybe lagged reload?
 * Kill upblob cells out of gamefiled (instead of waiting for last one to be out)
 * Turn on / off sound by pressing s
 

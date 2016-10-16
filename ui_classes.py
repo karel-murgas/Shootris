@@ -134,18 +134,21 @@ class Background:
 
         self.act.blit(self.image, rect, rect)
 
-    def fade(self, f_type, step, group=ALL_SPRITES):
+    def fade(self, f_type, step, max_step, group=ALL_SPRITES):
         """Draw background or image with alpha depending on fade step -> show or hide"""
 
         if f_type == 'in':
             image = self.image  # show
-        elif f_type =='out':
+        elif f_type == 'out':
             image = self.clear  # hide
-        image.set_alpha(step * 0.1)
-        self.redraw(self.image, group)
+
+        self.screen.blit(self.act, (0, 0))
+        image.set_alpha((step * 255) // max_step)
+        self.redraw(image, group)
 
     def redraw(self, img, group=ALL_SPRITES):
         """Change background without covering sprites"""
 
         self.screen.blit(img, (0, 0))
-        group.draw(self.screen)
+        if group:
+           group.draw(self.screen)
