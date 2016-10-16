@@ -92,7 +92,12 @@ TIPS = [
     'Highscore lasts only for current session',
     'Game starts by clicking right half of screen',
     'Full magazine will not get new colors',
-    'ESCAPE will end the game instantly'
+    'ESCAPE will end the game instantly',
+    'Up-going blob will destroy covered cells if shot',
+    'Up-going blob respawns after it\'s destruction',
+    'If you win, whole background will uncover',
+    'Up-going blob does not uncover background',
+    'You gain one point for every destroyed cell'
 ]
 
 # Gameplay #
@@ -122,7 +127,7 @@ SOUND_BGM_ON = True
 
 # Gameplay #
 MAXCOLORS = 5  # how many of defined colors will be used
-MAXROW = 20  # how many lines will be generated per game
+MAXROW = 100  # how many lines will be generated per game
 MAXCOL = 15  # width of game field
 MAXAMMO = 5  # length of magazine
 LEFTSTICK = 0.7  # probability of taking color from left cell

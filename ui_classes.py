@@ -32,6 +32,7 @@ class Infopanel():
 
     def __init__(self, screen, left=INFO_LEFT, top=1, width=INFOWIDTH, height=FIELDLENGTH):
         self.magazine = Magazine(screen, top=top+1, height=2)
+        self.progress = Label(screen, top=top+4, pre_text='Progress: ')
         self.score = Label(screen, top=top+6, pre_text='SCORE: ', width=6)
         self.highscore = Label(screen, top=top+6, l_shift=8, pre_text='HIGHSCORE: ', width=7, font_color=RED)
         self.status = Label(screen, top=top+height/2)

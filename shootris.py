@@ -96,10 +96,9 @@ def play(screen, display, clock, highscore):
         SOUND['bg_music'].play(loops=-1)
 
     # Display
-    bg = Background(screen, MAXCOL + 2, FIELDLENGTH + 2, theme='cats', size=CS)
+    bg = Background(screen, MAXCOL + 2, FIELDLENGTH + 2, theme='girls', size=CS)
     score = 0
     display.score.write(score)
-    print('Ingame', highscore)
     display.highscore.write(highscore)
     display.action.write('')  # Clears action area of display
     display.status.write(TEXT_INSTRUCTIONS)
@@ -144,6 +143,7 @@ def play(screen, display, clock, highscore):
         elif event.type == MAIN_BLOB_MOVE_EVENT:
             if not mb.move():
                 pyg.event.post(pyg.event.Event(LOSE_EVENT))
+            display.progress.write(str(mb.generated_rows) + ' / ' + str(mb.max_rows))
         elif event.type == UP_BLOB_MOVE_EVENT:
             ub = ub.move()
         elif event.type == ADD_AMMO_EVENT:
@@ -217,12 +217,10 @@ while waiting:
             exit()
         elif event.key == pyg.K_SPACE:  # start game
             highscore = max(highscore, play(screen, display, clock, highscore))
-            print('After game', highscore)
     elif event.type == pyg.MOUSEBUTTONDOWN:
         if event.button == 1 or event.button == 3:  # start game
             if INFO_FIELD.collidepoint(pyg.mouse.get_pos()):
                 highscore = max(highscore, play(screen, display, clock, highscore))
-                print('After game', highscore)
 
     # Autoevents
     elif event.type == BLINK_EVENT:
