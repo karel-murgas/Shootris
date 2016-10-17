@@ -106,7 +106,8 @@ TIPS = [
     'Up-going cells can hit the ceiling, it\'s OK',
     'You lose if any cell from top hits the bottom',
     'Don\'t conserve ammo, it is not Shadowrun.',
-    'You can reload also by clicking / tapping the magazine'
+    'You can reload also by clicking / tapping the magazine',
+    'This game supports hotseat multiplayer'
 
 ]
 
