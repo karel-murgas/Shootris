@@ -308,6 +308,7 @@ class Gun:
     def shoot(self, cursor, mb, ub, deadpool, background):
         score = 0
         status = None
+        print(self.magazine)
         if len(self.magazine) > 0:  # have amoo
             bullet = self.magazine.popleft()
             upkill = False
@@ -371,6 +372,8 @@ class Gun:
         if len(self.magazine) > 1:
             bullet = self.magazine.popleft()
             self.magazine.append(bullet)
+            print('change', bullet)
             return 'reload'
         else:
+            print('change: empty')
             return 'empty'

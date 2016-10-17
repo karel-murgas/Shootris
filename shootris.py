@@ -74,6 +74,29 @@ def pause_game(display, clock):
     display.status.write(TEXT_INSTRUCTIONS)
 
 
+def fade(clock, bg, status, last_step=FADE_STEPS):
+    """Slowly hides / shows background; used when game ends"""
+
+    pyg.time.set_timer(FADE_EVENT, FADE_SPEED)
+    f_type = 'in' if status == 'win' else 'out'
+    fade_step = 0
+
+    waiting = True
+    while waiting:
+
+        event = pyg.event.poll()
+        if event.type == FADE_EVENT:
+            fade_step += 1
+            bg.fade(f_type, fade_step, last_step, ALL_SPRITES)
+            if fade_step == FADE_STEPS:
+                waiting = False
+
+        pyg.display.update()
+        clock.tick(60)  # max 60 fps
+
+    pyg.time.set_timer(FADE_EVENT, 0)
+
+
 def play(screen, display, clock, highscore):
     """Runs the main loop with game"""
 
@@ -119,20 +142,24 @@ def play(screen, display, clock, highscore):
             elif event.key == pyg.K_SPACE:  # pause game
                 pause_game(display, clock)
         elif event.type == pyg.MOUSEBUTTONDOWN:
-            if event.button == 1 and GAME_FIELD.collidepoint(pyg.mouse.get_pos()):  # shoot the gamefield
-                cursor.update(event.pos)
-                sc, status, win = shooter.shoot(cursor, mb, ub, deadpool, bg)  # test hit
-                display.magazine.show_ammo(shooter.magazine)
-                if sc > 0:  # got some points
-                    score += sc
-                    if score < highscore:
-                        display.score.write(score, color=WHITE)
-                    else:
-                        display.score.write(score, color=GREEN)
-                if SOUND_EFFECTS_ON and SOUND[status]:  # sound ON and effect is defined
-                    SOUND[status].play()
-                if win:  # won
-                    pyg.event.post(pyg.event.Event(END_EVENT, {'status': 'win'}))
+            if event.button == 1:
+                if GAME_FIELD.collidepoint(pyg.mouse.get_pos()):  # shot the gamefield
+                    cursor.update(event.pos)
+                    sc, status, win = shooter.shoot(cursor, mb, ub, deadpool, bg)  # test hit
+                    display.magazine.show_ammo(shooter.magazine)
+                    if sc > 0:  # got some points
+                        score += sc
+                        if score < highscore:
+                            display.score.write(score, color=WHITE)
+                        else:
+                            display.score.write(score, color=GREEN)
+                    if SOUND_EFFECTS_ON and SOUND[status]:  # sound ON and effect is defined
+                        SOUND[status].play()
+                    if win:  # won
+                        pyg.event.post(pyg.event.Event(END_EVENT, {'status': 'win'}))
+                if display.magazine.rect.collidepoint(pyg.mouse.get_pos()):  # clicked or tapped magazine
+                    if shooter.change_ammo() == 'reload':
+                        display.magazine.show_ammo(shooter.magazine)
             if event.button == 3:
                 if shooter.change_ammo() == 'reload':
                     display.magazine.show_ammo(shooter.magazine)
@@ -152,25 +179,16 @@ def play(screen, display, clock, highscore):
             if shooter.add_ammo() == 'added':
                 display.magazine.show_ammo(shooter.magazine)
 
-        # Special events
+        # End of game
         elif event.type == END_EVENT:
-            pyg.time.set_timer(MAIN_BLOB_MOVE_EVENT, 0)
-            pyg.time.set_timer(UP_BLOB_MOVE_EVENT, 0)
-            pyg.time.set_timer(ADD_AMMO_EVENT, 0)
             SOUND['bg_music'].stop()
             if SOUND_EFFECTS_ON:
                 SOUND[event.status].play()
             display.status.write(TEXT_WON) if event == 'win' else display.status.write(TEXT_LOST)
-            pyg.time.set_timer(FADE_EVENT, FADE_SPEED)
-            fade = 'in' if event.status == 'win' else 'out'
             if event.status == 'win':
                 ub.reset()
-            fade_step = 0
-        elif event.type == FADE_EVENT:
-            fade_step += 1
-            bg.fade(fade, fade_step, FADE_STEPS, ALL_SPRITES)
-            if fade_step == FADE_STEPS:
-                waiting = False
+            fade(clock, bg, event.status, FADE_STEPS)
+            waiting = False  # end loop
 
         # Draws everything
         if fade_step == 0:  # if game still runs
@@ -180,9 +198,11 @@ def play(screen, display, clock, highscore):
         clock.tick(60)  # max 60 fps
 
     # Game ended
+    pyg.time.set_timer(MAIN_BLOB_MOVE_EVENT, 0)
+    pyg.time.set_timer(UP_BLOB_MOVE_EVENT, 0)
+    pyg.time.set_timer(ADD_AMMO_EVENT, 0)
     ALL_SPRITES.empty()
     ALL_SPRITES.add(wall.sprites(), layer=LAYER_WALL)
-    pyg.time.set_timer(FADE_EVENT, 0)
 
     return(score)
 

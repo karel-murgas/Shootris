@@ -104,7 +104,10 @@ TIPS = [
     'Progress shows how many rows were already spawned',
     'To beat the game destroy all down-going cells',
     'Up-going cells can hit the ceiling, it\'s OK',
-    'You lose if any cell from top hits the bottom'
+    'You lose if any cell from top hits the bottom',
+    'Don\'t conserve ammo, it is not Shadowrun.',
+    'You can reload also by clicking / tapping the magazine'
+
 ]
 
 # Gameplay #
