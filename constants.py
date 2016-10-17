@@ -55,7 +55,8 @@ BLOB_IMG = 'squares_many_black.gif'
 UP_IMG = 'squares_big_white.gif'
 BACKGROUNDS = {
     'girls': ['bed.jpg', 'blond.jpg', 'bent.jpg'],
-    'cats': ['double.jpg', 'white.jpg', 'beige.jpg']
+    'cats': ['double.jpg', 'white.jpg', 'beige.jpg'],
+    'fantasy': ['pirate.jpg', 'vampire.jpg', 'warrior.jpg', 'ranger.jpg']
 }
 LAYER_WALL = 3  # most visible
 LAYER_UP = 2

@@ -120,7 +120,7 @@ def play(screen, display, clock, highscore):
         SOUND['bg_music'].play(loops=-1)
 
     # Display
-    bg = Background(screen, MAXCOL + 2, FIELDLENGTH + 2, theme='girls', size=CS)
+    bg = Background(screen, MAXCOL + 2, FIELDLENGTH + 2, theme='fantasy', size=CS)
     score = 0
     display.magazine.show_ammo(shooter.magazine)
     display.score.write(score)

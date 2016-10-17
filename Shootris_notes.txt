@@ -24,7 +24,7 @@ Deadpool:
 
 Fails:
 * Exe file - I need a help with this! (Python 3.5, Pyinstaller doesn't work (even when commenting out the pictures) - it creates exe, which crashes to desktop)
-* First successful shot lags the game. I have no idea why.
+* First successful shot lags the game. I have no idea why. - It seems that it stopped...
 
 
 
