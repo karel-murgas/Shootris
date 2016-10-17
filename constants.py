@@ -38,6 +38,16 @@ pyg.init()
 #########
 
 # Visual #
+# Colors
+cb = {  # colors for colorblind
+    'orange': (230, 159, 0),
+    'blue_light': (86, 180, 233),
+    'green': (0, 158, 115),
+    'yellow': (240, 228, 66),
+    'blue_dark': (0, 114, 178),
+    'red': (213, 94, 0),
+    'pink': (204, 121, 167),
+}
 RED = (128, 0, 0)
 GREEN = (0, 128, 0)
 BLUE = (0, 128, 128)
@@ -45,6 +55,11 @@ WHITE = (255, 255, 255)
 YELLOW = (128, 128, 0)
 PINK = (128, 0, 128)
 BLACK = (0, 0, 0)
+COLORS = [RED, GREEN, BLUE, PINK, YELLOW]
+# Only as a option for colorblind people
+# COLORS = [cb['red'], cb['green'], cb['blue_dark'], cb['pink'], cb['yellow'], cb['blue_light']]
+
+
 UP_BLOB_ALPHA = 192
 CS = 30
 BG_IMG_FOLD = 'backgrounds/'
@@ -109,11 +124,7 @@ TIPS = [
     'Don\'t conserve ammo, it is not Shadowrun.',
     'You can reload also by clicking / tapping the magazine',
     'This game supports hotseat multiplayer'
-
 ]
-
-# Gameplay #
-COLORS = [RED, GREEN, BLUE, PINK, YELLOW]
 
 # Events #
 END_EVENT = pyg.USEREVENT + 1

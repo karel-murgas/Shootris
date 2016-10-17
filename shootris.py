@@ -158,10 +158,10 @@ def play(screen, display, clock, highscore):
                         SOUND[status].play()
                     if win:  # won
                         pyg.event.post(pyg.event.Event(END_EVENT, {'status': 'win'}))
-                if display.magazine.rect.collidepoint(pyg.mouse.get_pos()):  # clicked or tapped magazine
+                if display.magazine.rect.collidepoint(pyg.mouse.get_pos()):  # reload by clicking magazine
                     if shooter.change_ammo() == 'reload':
                         display.magazine.show_ammo(shooter.magazine)
-            if event.button == 3:
+            if event.button == 3:  # reload by rightclick
                 if shooter.change_ammo() == 'reload':
                     display.magazine.show_ammo(shooter.magazine)
 

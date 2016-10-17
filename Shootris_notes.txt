@@ -1,25 +1,30 @@
 Next steps:
 * Find bug when sometimes right hit returns hit_fail - maybe lagged reload?
-* Turn on / off sound by pressing s
+* Turn on / off sound by pressing s mixer.pause / unpause
 * Consolidate events (use parameters)
-* Find colors for colorblind
+* Clean up code
 
 
 TODO:
-* Clean up code
-* When destroying cell, brighter flash for a moment (50ms?)
-* Universal ammo
-* Ammo of two colors
-* Setting & difficulties (menu)
 * Allow adding new backgrounds and themes just by copiing them into folder
 * Center background (if size does not fit)
+* When destroying cell, brighter flash for a moment (50ms?)
+* Setting & difficulties (menu, toggle colorblind mode)
+* Save settings (and highscore)
+* Universal ammo
+* Ammo of two colors
 * Handle potential errors
-
 
 Deadpool:
 * Each cell has lifetime
 * If lifetime <= 0 -> kill it
 * Else - update color
+
+
+Menu:
+* Blit current screent first
+* Show menu, do whatever is needed
+* Blit original screen back 
 
 
 Fails:

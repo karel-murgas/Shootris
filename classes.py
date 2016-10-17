@@ -186,6 +186,7 @@ class Blob(pyg.sprite.RenderUpdates):
         score = 0
         # TODO: When called for first time, this cycle freezes the game for a short while. I have no idea why.
         # If I leave only adding score, it is still broken. Even for low number of cells
+        # It seems that it stopped for no reason... I'll have to watch it...
         for c in cells:
             if reveal and background:
                 background.reveal(c.rect)
