@@ -334,6 +334,7 @@ class Gun:
                     else:  # hit wrong color
                         status = 'hit_fail'
                 else:  # missed everything
+                    print('miss')
                     status = 'miss'
 
             # Upgoing blob was hit

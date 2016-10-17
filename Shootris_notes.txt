@@ -2,6 +2,7 @@ Next steps:
 * Find bug when sometimes right hit returns hit_fail - maybe lagged reload?
 * Turn on / off sound by pressing s
 * Consolidate events (use parameters)
+* Find colors for colorblind
 
 
 TODO:

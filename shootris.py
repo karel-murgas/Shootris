@@ -184,7 +184,7 @@ def play(screen, display, clock, highscore):
             SOUND['bg_music'].stop()
             if SOUND_EFFECTS_ON:
                 SOUND[event.status].play()
-            display.status.write(TEXT_WON) if event == 'win' else display.status.write(TEXT_LOST)
+            display.status.write(TEXT_WON) if event.status == 'win' else display.status.write(TEXT_LOST)
             if event.status == 'win':
                 ub.reset()
             fade(clock, bg, event.status, FADE_STEPS)
