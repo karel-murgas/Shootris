@@ -313,7 +313,7 @@ class Gun:
         if len(self.magazine) > 0:  # have amoo
             bullet = self.magazine.popleft()
             upkill = False
-            up_hit = pyg.sprite.spritecollideany(cursor, ub, 0)
+            up_hit = pyg.sprite.spritecollideany(cursor, ub, None)
 
             # Hit upgoing blob
             if up_hit:
@@ -323,7 +323,7 @@ class Gun:
                 else:  # hit wrong color
                     status = 'hit_fail'
             else:
-                mb_hit = pyg.sprite.spritecollideany(cursor, mb, 0)
+                mb_hit = pyg.sprite.spritecollideany(cursor, mb, None)
 
                 # Hit main blob
                 if mb_hit:
