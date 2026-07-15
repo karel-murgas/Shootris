@@ -266,6 +266,7 @@ def play(screen, display, clock, highscore, settings):
         SOUND['bg_music'].play(loops=-1)
 
     # Display
+    screen.fill(BLACK)  # wipe whatever the settings menu / end screen painted outside sprite/Label rects
     bg = Background(screen, MAXCOL + 2, FIELDLENGTH + 2, theme=settings['theme'], pic=settings['image'], size=CS)
     score = 0
     display.magazine.show_ammo(shooter.magazine)

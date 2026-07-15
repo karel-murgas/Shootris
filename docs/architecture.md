@@ -36,6 +36,22 @@ constants.py  →  utilities.py  →  classes.py  →  ui_classes.py  →  shoot
   runs the actual game's event loop (player input, timed move/spawn events, end-of-game fade,
   `run_end_screen()`, redraw + `clock.tick(60)`).
 
+## Screen clearing: sprites and Labels only erase what they already track
+
+`ALL_SPRITES.clear(screen, bgd)` + `.draw(screen)` only erases/redraws the rects it
+already has bookkeeping for (each sprite's current/previous position); `Label.write()`
+only clears its own small rect. Neither ever repaints arbitrary pixels something else
+put on `screen` outside those areas. `ui_classes.Menu` (the settings/end-of-round
+screens) paints directly onto the full `screen` surface — its own `draw()` wipes its
+*own* rectangle every call, but nothing else knows to clean up after it once it hands
+control back to normal gameplay drawing. `play()` therefore does an explicit
+`screen.fill(BLACK)` right before it (re)builds `Background`/`Infopanel` each round —
+skip that and leftover menu text/buttons stay visible forever in whatever gaps the
+sprite/Label redraws don't cover (this happened for real: stale "SHOOTRIS" title and
+option-row text bled into the info panel after clicking START GAME, until the fill was
+added). Any future full/partial-screen overlay needs the same treatment at the point it
+hands back to normal rendering.
+
 ## Coordinate system
 
 Two coordinate spaces are used throughout and should not be mixed up:
