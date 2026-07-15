@@ -38,50 +38,104 @@ pyg.init()
 #########
 
 # Visual #
+# Colors
+cb = {  # colors for colorblind
+    'orange': (230, 159, 0),
+    'blue_light': (86, 180, 233),
+    'green': (0, 158, 115),
+    'yellow': (240, 228, 66),
+    'blue_dark': (0, 114, 178),
+    'red': (213, 94, 0),
+    'pink': (204, 121, 167),
+}
 RED = (128, 0, 0)
 GREEN = (0, 128, 0)
-BLUE = (0, 0, 128)
+BLUE = (0, 128, 128)
 WHITE = (255, 255, 255)
 YELLOW = (128, 128, 0)
 PINK = (128, 0, 128)
 BLACK = (0, 0, 0)
-CELLSIZE = 30
-CELL = pyg.Surface((CELLSIZE, CELLSIZE))
+COLORS = [RED, GREEN, BLUE, PINK, YELLOW]
+# Only as a option for colorblind people
+# COLORS = [cb['red'], cb['green'], cb['blue_dark'], cb['pink'], cb['yellow'], cb['blue_light']]
+
+
+UP_BLOB_ALPHA = 192
+EXPLODE_FLASH_COLOR = WHITE  # cells flash this color for one wave before the explosion kills them
+CS = 30
+BG_IMG_FOLD = 'backgrounds/'
+TEXT_IMG_FOLD = 'textures/'
+IMG_FOLD = 'images/'
+WALL_IMG = 'squares_big_black.gif'
+BLOB_IMG = 'squares_many_black.gif'
+UP_IMG = 'squares_big_white.gif'
+BACKGROUNDS = {
+    'girls': ['bed.jpg', 'blond.jpg', 'bent.jpg'],
+    'cats': ['double.jpg', 'white.jpg', 'beige.jpg'],
+    'fantasy': ['pirate.jpg', 'vampire.jpg', 'warrior.jpg', 'ranger.jpg']
+}
+LAYER_WALL = 3  # most visible
+LAYER_UP = 2
+LAYER_MAIN = 1  # most hidden
+FADE_STEPS = 100
 
 # Sound #
-sound_game_over = pyg.mixer.Sound('sound/game_over.wav')
-sound_win = pyg.mixer.Sound('sound/win.wav')
-sound_bgm = pyg.mixer.Sound('sound/background.wav')
-sound_hit_success = pyg.mixer.Sound('sound/hit_success.wav')
-sound_hit_fail = pyg.mixer.Sound('sound/hit_fail.wav')  # a little bit louder would be better
-sound_reload = pyg.mixer.Sound('sound/reload.ogg')
-sound_miss = pyg.mixer.Sound('sound/miss.wav')
-sound_empty = pyg.mixer.Sound('sound/empty.wav')
+SOUND = {
+    # Game sounds
+    'game_over': pyg.mixer.Sound('sound/game_over.wav'),
+    'win': pyg.mixer.Sound('sound/win.wav'),
+    'bg_music': pyg.mixer.Sound('sound/background.wav'),
+    # Shooting effects
+    'hit_success': pyg.mixer.Sound('sound/hit_success.wav'),
+    'hit_fail': pyg.mixer.Sound('sound/hit_fail.wav'),  # a little bit louder would be better
+    'reload': pyg.mixer.Sound('sound/reload.ogg'),
+    'miss': pyg.mixer.Sound('sound/miss.wav'),
+    'empty': pyg.mixer.Sound('sound/empty.wav')
+}
 
 # Texts #
 TEXT_STARTGAME = 'CLICK HERE or press SPACE'
+TEXT_TIPS_HEADER = 'DID YOU KNOW?'
+TEXT_WELCOME = 'Welcome!'
+TEXT_PAUSE_INFO = 'The game is PAUSED'
+TEXT_UNPAUSE = 'Press SPACE to unpause'
+TEXT_WON = 'YOU WON! Congratulations.'
+TEXT_LOST = 'GAME OVER'
+TEXT_INSTRUCTIONS = 'LEFT shoot, RIGHT change'
 TIPS = [
     'New row is based on the row below it',
-    'Right click moves first color to the end',
+    'Right click moves first color in the magazine to the end',
     'You can pause the game with SPACE',
-    'The game can be beated, it is not endless',
+    'The game can be beaten, it is not endless',
     'Highscore lasts only for current session',
-    'Game starts by clicking right half of screen',
+    'Game starts by clicking anywhere in right half of screen',
     'Full magazine will not get new colors',
-    'ESCAPE will end the game instantly'
+    'ESCAPE will end the game instantly',
+    'Up-going blob will destroy covered cells if shot',
+    'Shoot up-going blob to spawn a new one',
+    'If you win, whole background will uncover',
+    'You have to win to enjoy view of the background',
+    'Shooting up-going blob does not uncover background',
+    'You gain one point for any destroyed cell',
+    'Up-going blobs are perfect for destroying lonely cells',
+    'Progress shows how many rows were already spawned',
+    'To beat the game destroy all down-going cells',
+    'Up-going cells can hit the ceiling, it\'s OK',
+    'You lose if any cell from top hits the bottom',
+    'Don\'t conserve ammo, this is not Shadowrun.',
+    'You can reload also by clicking / tapping the magazine',
+    'This game supports hotseat multiplayer'
 ]
 
-# Gameplay #
-COLORS = [RED, GREEN, BLUE, PINK, YELLOW]
-
 # Events #
-WIN_EVENT = pyg.USEREVENT + 1
+END_EVENT = pyg.USEREVENT + 1
 ADD_AMMO_EVENT = pyg.USEREVENT + 2
-LOOSE_EVENT = pyg.USEREVENT + 3
-MAIN_BLOB_MOVE_EVENT = pyg.USEREVENT + 4
-# SMALL_BLOB_MOVE_EVENT = pyg.USEREVENT + 5
-FLASH_EVENT = pyg.USEREVENT + 6
-TIPS_EVENT = pyg.USEREVENT + 7
+MAIN_BLOB_MOVE_EVENT = pyg.USEREVENT + 3
+UP_BLOB_MOVE_EVENT = pyg.USEREVENT + 4
+BLINK_EVENT = pyg.USEREVENT + 5
+TIPS_EVENT = pyg.USEREVENT + 6
+FADE_EVENT = pyg.USEREVENT + 7
+EXPLODE_EVENT = pyg.USEREVENT + 8
 
 
 ############
@@ -90,7 +144,7 @@ TIPS_EVENT = pyg.USEREVENT + 7
 
 # Screen #
 FIELDLENGTH = 25  # how long will game field be, also defines screen height
-INFOWIDTH = 13  # how wide will info filed be
+INFOWIDTH = 16  # how wide will info filed be
 
 # Sound #
 SOUND_EFFECTS_ON = True
@@ -103,18 +157,24 @@ MAXCOL = 15  # width of game field
 MAXAMMO = 5  # length of magazine
 LEFTSTICK = 0.7  # probability of taking color from left cell
 BOTTOMSTICK = 0.5  # probability of taking color from left cell
+UP_LEFTSTICK = 0.4
+UP_BOTTOMSTICK = 0.75
 
 # Frequencies #
-AMMO_REPLENISH_SPEED = 1500
-MAIN_BLOB_SPEED = 80
-# SMALL_BLOB_SPEED = 500
-TEXT_FLESH_TIME = 500
+ADD_AMMO_SPEED = 1500
+MAIN_BLOB_SPEED = 90
+UP_BLOB_SPEED = 40
+BLINK_TIME = 500
 TIPS_TIME = 8000
+EXPLODE_WAVE_SPEED = 45  # ms between explosion waves, from the shot outward
 
 
 ##############
 # Calculated #
 ##############
 
-GAME_FIELD = pyg.Rect(0, 0, MAXCOL*CELLSIZE, FIELDLENGTH*CELLSIZE)
-INFO_FIELD = pyg.Rect((MAXCOL + 1) * CELLSIZE, 0, INFOWIDTH*CELLSIZE, FIELDLENGTH*CELLSIZE)
+GAME_FIELD = pyg.Rect(1 * CS, 1 * CS, MAXCOL * CS, FIELDLENGTH * CS)  # used for background
+INFO_LEFT = MAXCOL + 2
+INFO_FIELD = pyg.Rect((MAXCOL + 2) * CS, 1 * CS, INFOWIDTH * CS, FIELDLENGTH * CS)  # used for interaction with info field
+ALL_SPRITES = pyg.sprite.LayeredUpdates()  # Group for updating gamefield
+FADE_SPEED = 3000 // FADE_STEPS

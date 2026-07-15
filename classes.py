@@ -24,227 +24,375 @@ from collections import deque
 from utilities import *
 
 
-#####################
-# Class definitions #
-#####################
+#######################
+# Classes definitions #
+#######################
 
-class Blob:
-    """Defines blob - now only for main blob - to be expanded later"""
-    def __init__(self, screen, field, event, speed):
-        self.cols = MAXCOL
-        self.max_rows = MAXROW
-        self.top = 0
-        self.left = 0
-        self.ls = LEFTSTICK
-        self.bs = BOTTOMSTICK
-        self.content = deque([])
+class Cell(pyg.sprite.Sprite):
+    """Default class for all cells"""
+
+    def __init__(self, cell_type, left, top, col, row, layer, alpha=255, layer_group=ALL_SPRITES):
+        pyg.sprite.Sprite.__init__(self)
+        self.image = cell_type
+        self.color = None
+        self.image.set_alpha(alpha)
+        self.rect = self.image.get_rect()
+        self.rect.move_ip(left, top)
+        self.col = col
+        self.row = row
+        self.layer = layer
+        self.time_to_live = 0
+        layer_group.add(self, layer=layer)
+
+    def update(self, direction=0):
+        """Move the cell in given direction"""
+
+        self.rect = self.rect.move(0, direction)
+
+    def rat_neighbour(self, mb, ub, color, lifetime):
+        """Find neighbours, with given color and report if same color upgoing-blob is in the way"""
+
+        upkill = False
+        to_die = []
+
+        # Living left neighbour
+        if self.col > 0 and mb.matrix[self.row][self.col - 1] is not None:
+            c = mb.matrix[self.row][self.col - 1]
+            if c.color == color:  # of right color
+                c.time_to_live = lifetime
+                to_die.append(c)
+
+        # Living top neighbour of right color
+        if self.row < mb.generated_rows - 1 and mb.matrix[self.row + 1][self.col] is not None:
+            c = mb.matrix[self.row + 1][self.col]
+            if c.color == color:  # of right color
+                c.time_to_live = lifetime
+                to_die.append(c)
+
+        # Living right neighbour of right color
+        if self.col < mb.max_cols - 1 and mb.matrix[self.row][self.col + 1] is not None:
+            c = mb.matrix[self.row][self.col + 1]
+            if c.color == color:  # of right color
+                c.time_to_live = lifetime
+                to_die.append(c)
+
+        # Living bottom neighbour of right color
+        if self.row > 0 and mb.matrix[self.row - 1][self.col] is not None:
+            c = mb.matrix[self.row - 1][self.col]
+            if c.color == color:  # of right color
+                c.time_to_live = lifetime
+                to_die.append(c)
+
+        if ub.color == color and ub.generated_rows != 0:
+            if pyg.sprite.spritecollideany(self, ub, collide_cell_touch):
+                upkill = True
+
+        return to_die, upkill
+
+    def colorate(self, color):
+        """Fill cell with given color"""
+        self.image.fill(color)
+        self.color = color
+
+    def load_image(self, image, path=IMG_FOLD+TEXT_IMG_FOLD):
+        """Load image with given path into this cell"""
+        img = pyg.image.load(path + image)
+        self.image.blit(img, (0, 0))
+
+
+class Point(pyg.sprite.Sprite):
+    """Simple point enabling to test collisions"""
+
+    def __init__(self):
+        pyg.sprite.Sprite.__init__(self)
+        self.rect = pyg.Rect(0, 0, 1, 1)
+
+    def update(self, target):
+        """Update position (rect) of Point"""
+        self.rect = pyg.Rect(target, (1, 1))
+
+
+class Blob(pyg.sprite.RenderUpdates):
+    """Areas containing cells"""
+
+    def __init__(self, direction, ls, bs, left=1, top=0, max_rows=MAXROW, max_cols=MAXCOL, layer=LAYER_MAIN):
+        pyg.sprite.RenderUpdates.__init__(self)
+        self.direction = direction
+        self.l_prob = ls
+        self.b_prob = bs
+        self.offset = 0
+        self.max_rows = max_rows
+        self.max_cols = max_cols
         self.generated_rows = 0
-        self.append_row()
-        self.screen = screen
-        self.field = field
-        self.speed = speed
-        self.timer = pyg.time.set_timer(event, speed)
-        self.event = event
-        self.row_fraction = 0
+        self.matrix = []
+        self.left = left
+        self.top = top
+        self.layer = layer
 
-        # oveř prádzný spodek
-        # zahoď spodek
+    def generate_cell_color(self, cell):
+        """Generate color with regards to other cells in blob"""
 
-    def get_rect(self):
-        """Gets rectangle containing the blob"""
-        top_line = 0 if self.top == 0 else self.top * CELLSIZE - rest_of_cell(self.row_fraction)
-        bottom_len = len(self.content) * CELLSIZE
-        if self.top == 0:
-            bottom_len -= rest_of_cell(self.row_fraction)
-        return pyg.Rect(self.left * CELLSIZE, top_line, self.cols * CELLSIZE, bottom_len)
-
-    def get_bottom(self):
-        """Returns row index of bottom row"""
-        return self.top + len(self.content) - 1  # index of top row + number of rows - correction
-
-    def create_cell(self, r, c):
-        """Creates content of the cell - colors the cell regarding left and bottom neighbours"""
-        if c > 0 and roll(self.ls) and self.content[r][c - 1] is not None:
-            return self.content[r][c - 1]  # color by left cell
-        elif r < len(self.content) - 1 and roll(self.bs) and self.content[r + 1][c] is not None:
-            return self.content[r + 1][c]  # color by bottom cell
+        if roll(self.l_prob) and cell.col > 0 and self.matrix[cell.row][cell.col - 1] is not None:
+            color = self.matrix[cell.row][cell.col - 1].color
+        elif roll(self.b_prob) and cell.row > 0 and self.matrix[cell.row - 1][cell.col] is not None:
+            color = self.matrix[cell.row - 1][cell.col].color
         else:
-            return get_random_color()  # random color
+            color = get_random_color()
+        return color
 
-    def append_row(self):
-        """Appends new row to the start of the blob"""
-        self.content.appendleft([])
-        self.generated_rows += 1
-        for c in range(self.cols):
-            self.content[0].append(self.create_cell(0, c))
+    def generate_cell(self, left, top, col, row, size=CS, alpha=255, image=None):
+        """Generate new cell for the blob, called by ad_row method"""
 
-    def clearRow(self, row):
-        """Draws row as if the color was None"""
-        draw_blob(self.screen, self.field, [[None]*self.cols], row)
-
-    def destroy(self):
-        """Ends the game and deletes the blob instance"""
-        self.timer = pyg.time.set_timer(self.event, 0)
-        pyg.event.post(pyg.event.Event(LOOSE_EVENT))
-        del self
-
-    def win(self):
-        """Ends the game winning and deletes the blob instance"""
-        self.timer = pyg.time.set_timer(self.event, 0)
-        pyg.event.post(pyg.event.Event(WIN_EVENT))
-        del self
-
-    def move(self):
-        """Moves the blob one pixel down, checks for blob boundaries"""
-        if self.get_bottom() >= FIELDLENGTH - 1 and self.row_fraction == 0:
-            self.destroy()
-        else:
-            if self.generated_rows < self.max_rows:  # there is new line in the buffer
-                if self.row_fraction == 0:
-                    self.append_row()
-            else:  # clear the top line
-                self.screen.blit(pyg.Surface((self.cols * CELLSIZE, 1)), (0, self.top * CELLSIZE - rest_of_cell(self.row_fraction), self.cols * CELLSIZE, 1))
-                if self.row_fraction == 0:
-                    self.top += 1
-
-            self.row_fraction = (self.row_fraction + 1) % CELLSIZE
-            draw_blob(self.screen, self.field, self.content, self.top, self.row_fraction)
-
-    def damage(self, r, c, color):
-        """Deletes content of this cell and all direct neighbours"""
-        score = 0
-        if self.content[r][c] == color:
-            self.content[r][c] = None
-            score += 1
-            if c > 0 and self.content[r][c - 1] == color:  # left
-                score += self.damage(r, c - 1, color)
-            if c < self.cols - 1 and self.content[r][c + 1] == color:  # right
-                score += self.damage(r, c + 1, color)
-            if r > 0 and self.content[r - 1][c] == color:  # top
-                score += self.damage(r - 1, c, color)
-            if r < len(self.content) - 1 and self.content[r + 1][c] == color:  # bottom
-                score += self.damage(r + 1, c, color)
-        return score
-
-    def hit(self, c, r, color):
-        """Determines, if hit was success. If it was, deletes cells and checks and pop out empty bottom rows"""
-        if self.content[r][c] == color:
-            if SOUND_EFFECTS_ON:
-                sound_hit_success.play()
-            score = self.damage(r, c, color)
-            draw_blob(self.screen, self.field, self.content, self.top, self.row_fraction)
-            while len(self.content) > 0 and self.content[len(self.content) - 1] == [None] * self.cols:
-                self.content.pop()
-            if len(self.content) == 0 and self.max_rows == self.generated_rows:
-                self.win()
-            return score
-        else:
-            if SOUND_EFFECTS_ON:
-                if self.content[r][c] != None:
-                    sound_hit_fail.play()
-                else:
-                    sound_miss.play()
-            return 0
-
-
-class Infopanel:
-    def __init__(self, screen):
-        self.position = INFO_FIELD
-        self.score_position =INFO_FIELD[1] + 5 * CELLSIZE
-        self.highscore_position = INFO_FIELD[1] + 7 * CELLSIZE
-        self.text_position = INFO_FIELD[1] + FIELDLENGTH * CELLSIZE / 2
-        self.text_flash_position = INFO_FIELD[1] + (FIELDLENGTH + 2) * CELLSIZE / 2
-        self.tips_header_position = INFO_FIELD[1] + (FIELDLENGTH + 8) * CELLSIZE / 2
-        self.tips_text_position = INFO_FIELD[1] + (FIELDLENGTH + 10) * CELLSIZE / 2
-        self.text_flesh_visible = True
-        self.score = 0
-        self.highscore = 0
-        self.screen = screen
-        self.flash_timer = pyg.time.set_timer(FLASH_EVENT, TEXT_FLESH_TIME)
-        self.tips_timer = pyg.time.set_timer(TIPS_EVENT, TIPS_TIME)
-
-    def write(self, text, surf_top, surf_left=INFO_FIELD[0] + CELLSIZE, surf_size=((INFOWIDTH - 1) * CELLSIZE, CELLSIZE), color=WHITE, size=CELLSIZE):
-        font = pyg.font.SysFont(pyg.font.get_default_font(), size)
-        surf_start = (surf_left, surf_top)
-        self.screen.blit(pyg.Surface(surf_size), surf_start)
-        self.screen.blit(font.render(text, 1, color), surf_start)
-        pyg.display.update(pyg.Rect(surf_start, surf_size))
-
-    def message(self, text):
-        self.write(text, self.text_position)
-
-    def message_flash(self, text):
-        self.write(text, self.text_flash_position)
-
-    def message_tips_header(self, text):
-        self.write(text, self.tips_header_position)
-
-    def message_tips(self, text):
-        self.write(text, self.tips_text_position, size=(CELLSIZE * 4) // 5)
-
-    def add_score(self, score):
-        self.score += score
-        col = WHITE if self.score < self.highscore else GREEN
-        self.write('SCORE: ' + str(self.score), self.score_position, color=col)
-
-    def resetscore(self):
-        if self.score >= self.highscore:
-            self.write('HIGHSCORE: ' + str(self.score), self.highscore_position, color=RED)
-            self.highscore = self.score
-        self.score = 0
-        self.write('SCORE: 0', self.score_position)
-
-
-class Magazine:
-    def __init__(self, screen, max_ammo=MAXAMMO, event=ADD_AMMO_EVENT, speed=AMMO_REPLENISH_SPEED):
-        self.maxammo = max_ammo
-        self.screen = screen
-        self.position = pyg.Rect(INFO_FIELD[0] + CELLSIZE, INFO_FIELD[1] + CELLSIZE, (INFOWIDTH - 1) * CELLSIZE, 2 * CELLSIZE)
-        self.content = deque([])
-        self.add_ammo()
-        self.event = event
-        self.timer = pyg.time.set_timer(event, speed)
-
-    def add_ammo(self):
-        if len(self.content) < self.maxammo:
-            self.content.append(get_random_color())
-            self.draw()
-
-    def color_bullet(self, cell, color):
-        """Colors one 'bullet' cell"""
-        cell.fill(color)
+        where = pyg.Surface((size, size))
+        cell = Cell(where, left * size, top * size, col, row, self.layer, alpha)
+        cell.colorate(self.generate_cell_color(cell))
+        if image is not None:
+            cell.load_image(image)
         return cell
 
-    def draw(self):
-        self.screen.blit(pyg.Surface(((INFOWIDTH - 1) * CELLSIZE, 2 * CELLSIZE)), self.position)
-        cell = pyg.Surface((2 * CELLSIZE, 2 * CELLSIZE))
-        for i, color in enumerate(self.content):
-            self.screen.blit(self.color_bullet(cell, color), (INFO_FIELD[0] + (1 + 2 * i) * CELLSIZE, INFO_FIELD[1] + CELLSIZE))
-        pyg.display.update(self.position)
+    def add_row(self, image=None):
+        """Ad new row into the blob and fill it with cels"""
 
-    def shoot(self):
-        if not self.is_empty():
-            bullet = self.content.popleft()
-            self.draw()
-            return bullet
+        self.matrix.append([])
+        for i in range(self.left, self.max_cols + self.left):
+            cell = self.generate_cell(i, self.top, i - self.left, self.generated_rows, image=image)
+            self.add(cell)
+            self.matrix[self.generated_rows].append(cell)
+        self.generated_rows += 1
+
+    def test_destroy(self):
+
+        """If any cell is at bottom of game field, return true"""
+        for cell in iter(self):
+            if cell.rect.top == FIELDLENGTH * CS:
+                return True
+        return False
+
+    def move(self):
+        """Move the blob. If it is needed, generate new row. If game should end, return False."""
+
+        if self.offset == 0 and self.generated_rows < self.max_rows:  # when the time is right, add new row
+            self.add_row(image=BLOB_IMG)
+        self.update(self.direction)  # update cells
+        self.offset = (self.offset + self.direction) % CS
+        if self.offset == 0:
+            if self.test_destroy():
+                return False
+        return True  # move is OK
+
+    def ready_to_die(self, cells, reveal, background=None):
+        """Kill cells in iterative variable, count score, reveal background, check winning"""
+
+        score = 0
+        # TODO: When called for first time, this cycle freezes the game for a short while. I have no idea why.
+        # If I leave only adding score, it is still broken. Even for low number of cells
+        # It seems that it stopped for no reason... I'll have to watch it...
+        for c in cells:
+            if reveal and background:
+                background.reveal(c.rect)
+            c.kill()
+            score += 1
+        return score
+
+    def all_dead(self):
+        """Return True once every generated cell has been killed in the matrix (sprite may linger)"""
+        return all(cell is None for row in self.matrix for cell in row)
+
+    def group_by_wave(self, cells):
+        """Group cells by their explosion wave (time_to_live), ordered from the shot outward"""
+
+        waves = {}
+        for cell in cells:
+            waves.setdefault(cell.time_to_live, []).append(cell)
+        return [waves[wave] for wave in sorted(waves)]
+
+
+class UpBlob(Blob):
+    """Blob going upward"""
+
+    def __init__(self, direction, ls=UP_LEFTSTICK, bs=UP_BOTTOMSTICK, left=1, top=FIELDLENGTH+2, layer=LAYER_UP,
+                 max_rows=MAXROW, width=MAXCOL):
+        Blob.__init__(self, direction, ls, bs, left, top, max_rows, layer=layer)
+        self.max_rows_orig = max_rows
+        self.color = get_random_color()
+        self.width = width
+        self.center = rnd.randrange(left, left + width)
+
+    def generate_cell_color(self, *args):
+        return self.color
+
+    def add_row(self, image=UP_IMG):
+        i = 0
+        while roll(self.l_prob) and self.center - i > self.left:  # generate left
+            i += 1
+            self.add(self.generate_cell(self.center - i,  self.top, self.center - i, self.generated_rows,
+                                        alpha=UP_BLOB_ALPHA, image=image))
+
+        self.add(self.generate_cell(self.center,  self.top, self.center, self.generated_rows,
+                                    alpha=UP_BLOB_ALPHA, image=image))  # generate center
+
+        i = 0
+        while roll(self.l_prob) and self.center + i < self.left + self.max_cols - 1:  # generate right
+            i += 1
+            self.add(self.generate_cell(self.center + i,  self.top, self.center + i, self.generated_rows,
+                                        alpha=UP_BLOB_ALPHA, image=image))
+
+    def test_destroy(self):
+        for cell in iter(self):
+            if cell.rect.top < 0:
+                cell.kill()
+        if len(self) > 0:
+            return False
         else:
-            if SOUND_EFFECTS_ON:
-                sound_empty.play()
-            return None
+            return True
 
-    def destroy(self):
-        self.timer = pyg.time.set_timer(self.event, 0)
-        self.content = deque([])
-        self.draw()
-        del self
+    def reset(self):
+        for cell in iter(self):
+            cell.kill()
+        return UpBlob(self.direction, self.l_prob, self.b_prob, self.left, self.top, self.layer, self.max_rows_orig,
+                      self.width)
 
-    def is_empty(self):
-        return len(self.content) == 0
+    def move(self):
+        if self.offset == 0 and self.generated_rows < self.max_rows:
+            if roll(self.b_prob):
+                self.add_row()
+                self.generated_rows += 1
+            else:
+                self.max_rows = self.generated_rows  # stop generating
 
-    def reload(self):
-        if not self.is_empty():
-            if SOUND_EFFECTS_ON:
-                sound_reload.play()
-            bullet = self.content.popleft()
-            self.content.append(bullet)
-            self.draw()
+        self.update(self.direction)  # update cells
+        self.offset = (self.offset + self.direction) % CS
+        if self.offset == 0:
+            if self.test_destroy():
+                return self.reset()
+        return self  # move is OK
+
+
+class Wall(pyg.sprite.Group):
+    """Contains and draws wall cells"""
+
+    def __init__(self, layer=LAYER_WALL):
+        pyg.sprite.Group.__init__(self)
+        self.layer = layer
+
+    def generate_cell(self, left, top, image, color, size):
+        where = pyg.Surface((size, size))
+        cell = Cell(where, left * size, top * size, left, top, self.layer)
+        cell.colorate(color)
+        cell.load_image(image)
+        return cell
+
+    def create_wall(self, left, top, width=MAXCOL, height=FIELDLENGTH, size=CS, image=WALL_IMG, color=WHITE):
+        for i in range(width + 1):
+            self.add(self.generate_cell(left + i, top, image, color, size))
+        for j in range(height + 1):
+            self.add(self.generate_cell(left + i + 1, top + j, image, color, size))
+        for i in reversed(range(width + 1)):
+            self.add(self.generate_cell(left + i + 1, top + j + 1, image, color, size))
+        for j in range(height + 1):
+            self.add(self.generate_cell(left, top + j + 1, image, color, size))
+
+
+class Gun:
+    """Define attributes and methods used for shooting"""
+
+    def __init__(self, maxammo=MAXAMMO):
+        self.maxammo = maxammo
+        self.magazine = deque([])
+
+    def explode(self, mb, ub, deadpool, to_die, color):
+        """Breadth-first search to identify all cells with the same color and return their distance from hit"""
+
+        explode_ub = False
+
+        while to_die:
+            cell = to_die.popleft()
+            if mb.matrix[cell.row][cell.col] is not None:  # still living cell
+                mb.matrix[cell.row][cell.col] = None  # consider it dead
+                deadpool.add(cell)
+
+                volunteers, collision = cell.rat_neighbour(mb, ub, color, cell.time_to_live + 1)  # get new cells to die
+                if collision:  # the up-going blob is to die too
+                    explode_ub = True
+                to_die.extend(volunteers)
+
+        return explode_ub
+
+    def shoot(self, cursor, mb, ub, deadpool):
+        """Test the shot for a hit; main-blob cells are staged in deadpool, not killed yet"""
+
+        # The caller is expected to run deadpool through an explosion effect (see
+        # shootris.explode_effect) that kills the cells wave by wave, from the shot outward.
+        # Score and the win check don't need to wait for that: score is just a cell count, and
+        # mb.all_dead() reads the matrix bookkeeping that explode() already updates, independent
+        # of when the cells are actually killed.
+        score = 0
+        status = None
+        print(self.magazine)
+        if len(self.magazine) > 0:  # have amoo
+            bullet = self.magazine.popleft()
+            upkill = False
+            up_hit = pyg.sprite.spritecollideany(cursor, ub, None)
+
+            # Hit upgoing blob
+            if up_hit:
+                print('b', bullet, 'c', ub.color)
+                if ub.color == bullet:  # hit right color
+                    upkill = True
+                else:  # hit wrong color
+                    status = 'hit_fail'
+            else:
+                mb_hit = pyg.sprite.spritecollideany(cursor, mb, None)
+
+                # Hit main blob
+                if mb_hit:
+                    print('b', bullet, 'c', mb_hit.color)
+                    if mb_hit.color == bullet:  # hit right color
+                        upkill = self.explode(mb, ub, deadpool, deque([mb_hit]), bullet)
+                        status = 'hit_success'
+                    else:  # hit wrong color
+                        status = 'hit_fail'
+                else:  # missed everything
+                    print('miss')
+                    status = 'miss'
+
+            # Upgoing blob was hit
+            if upkill:
+                mb_to_die = set(pyg.sprite.groupcollide(mb, ub, 0, 0))  # directly covered - color doesn't matter
+                mb_neighbours = pyg.sprite.groupcollide(mb, ub, 0, 0, collide_cell_touch)  # neighbours of ub
+
+                score += ub.ready_to_die(iter(ub), False)  # destroy cells and count score
+
+                neighbours_to_die = set([cell for cell in mb_neighbours if cell.color == bullet])
+                mb_to_die |= neighbours_to_die
+                self.explode(mb, ub, deadpool, deque(mb_to_die), bullet)
+                status = 'hit_success'
+
+            score += len(deadpool)  # main-blob cells staged this shot, one point each
+        else:
+            status = 'empty'
+
+        # Check for winning
+        if status == 'hit_success' and mb.max_rows == mb.generated_rows and mb.all_dead():  # mb is destroyed
+            win = True
+        else:
+            win = False
+
+        return score, status, win
+
+    def add_ammo(self):
+        if len(self.magazine) < self.maxammo:
+            self.magazine.append(get_random_color())
+            return 'added'
+        else:
+            return 'full'
+
+    def change_ammo(self):
+        if len(self.magazine) > 1:
+            bullet = self.magazine.popleft()
+            self.magazine.append(bullet)
+            print('change', bullet)
+            return 'reload'
+        else:
+            print('change: empty')
+            return 'empty'

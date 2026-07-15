@@ -28,48 +28,43 @@ from constants import *
 # Function definitions #
 ########################
 
-def roll(pst):
-    """Tests random value [0,1) against given probability"""
-    return True if (rnd.random() < pst) else False
+
+def collide_cell_touch(*args):
+    """Return True if cells touch or intersect (except corner touch)"""
+    try:
+        s1, s2 = args
+    except ValueError:
+        print("Wrong number of arguments for collision function: " + str(args))
+        return False
+    size = CS  # I don't know how to pass it right
+    l1, l2 = s1.rect.left, s2.rect.left
+    t1, t2 = s1.rect.top, s2.rect.top
+
+    # Too much far (including top and bottom sides and corners)
+    if abs(l1 - l2) > size or abs(t1 - t2) > size:
+        return False
+    # Corner touch
+    elif abs(l1 - l2) == size and abs(t1 - t2) == size:
+        return False
+    # Side or inside touch
+    else:
+        return True
+
+
+def roll(prob):
+    """Test random value [0,1) against given probability"""
+    return True if (rnd.random() < prob) else False
 
 
 def get_random_color(colors=COLORS, stop=MAXCOLORS):
-    """Returns random color from list, list can be shortened"""
+    """Return random color from list, list can be shortened"""
     return colors[rnd.randrange(stop)]
 
 
-def get_random_tip(tips=TIPS, forbidden = -1):
-    """Returns random tip from list, it can omit previous tip"""
-    num = rnd.randrange(len(tips))  # if forbidden, take next (cycle through)
-    if num == forbidden:
-        num = (num + 1) % len(tips)
-    return num, tips[num]
+def change_element(element=None, my_list=TIPS):
+    """Return random value of array if it's different from given element, else return next one"""
 
-
-def color_surface(color, surf=CELL):
-    """Fills surface with color and returns that surface"""
-    surf.fill(color)
-    return surf
-
-
-def draw_cell(screen, r, c, color, row_fraction=0):
-    """Blits cell to surface"""
-    if color is None:
-        color = BLACK
-    screen.blit(color_surface(color, CELL), (c * CELLSIZE, r * CELLSIZE - rest_of_cell(row_fraction)))
-
-
-def draw_blob(screen, field, area, start_row, row_fraction=0):
-    """Draws blob on the surface"""
-    for r in range(len(area)):
-        for c in range(len(area[r])):
-            draw_cell(screen, r + start_row, c, area[r][c], row_fraction,)
-    pyg.display.update(field)
-
-
-def rest_of_cell(fraction, total=CELLSIZE):
-    """Tells how much of a cell is above line, if fraction of cell is bellow"""
-    if fraction == 0:
-        return 0
-    else:
-        return total - fraction
+    num = rnd.randrange(len(my_list))  # if forbidden, take next (cycle through)
+    if my_list[num] == element:
+        num = (num + 1) % len(my_list)
+    return my_list[num]

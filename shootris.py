@@ -1,4 +1,4 @@
-"""Maim script for Shootris. Covers gameplay."""
+"""Main script for Shootris. Covers gameplay."""
 #    Copyright (C) 2016  Karel "laird Odol" Murgas
 #    karel.murgas@gmail.com
 #
@@ -21,7 +21,7 @@
 #############
 
 from sys import exit
-from classes import *
+from ui_classes import *
 
 
 ########################
@@ -30,99 +30,213 @@ from classes import *
 
 def init_screen():
     """Gets the screen ready and draws environment"""
-    total_width = (MAXCOL + INFOWIDTH + 1)
-    pyg.display.set_icon(pyg.image.load('icon_crosshair_my.gif'))
-    screen_ = pyg.display.set_mode((total_width*CELLSIZE, FIELDLENGTH*CELLSIZE))
+    total_width = (MAXCOL + INFOWIDTH + 2)  # game field width + info field width + walls
+    total_height = (FIELDLENGTH + 2)  # game field height + 2
+    pyg.display.set_icon(pyg.image.load(IMG_FOLD + 'icon_crosshair.gif'))
+    screen_ = pyg.display.set_mode((total_width * CS, total_height * CS))
     pyg.display.set_caption('Shootris')
-    for r in range(FIELDLENGTH):
-        draw_cell(screen_, r, MAXCOL, WHITE)
+#    for r in range(FIELDLENGTH):
+#        draw_cell(screen_, r, MAXCOL, WHITE)
     pyg.display.update()
-    pyg.mouse.set_cursor(*pyg.cursors.load_xbm('cursor_crosshair_my.xbm', 'cursor_crosshair_my-mask.xbm'))
+    pyg.mouse.set_cursor(*pyg.cursors.load_xbm(IMG_FOLD + 'cursor_crosshair.xbm',
+                                               IMG_FOLD + 'cursor_crosshair-mask.xbm'))
     return screen_
 
 
-def pause_game():
+def pause_game(display, clock):
     """Pauses game until SPACE is pressed"""
+
+    display.status.write(TEXT_PAUSE_INFO)
 
     waiting = True
     while waiting:
+
+        # Player controls
         event = pyg.event.poll()
         if event.type == pyg.KEYDOWN:
             if event.key == pyg.K_SPACE:
-                info.message_flash('')
                 waiting = False
             elif event.key == pyg.K_ESCAPE:
                 exit()
-        elif event.type == FLASH_EVENT:
-            if info.text_flesh_visible:
-                info.message_flash('')
+
+        # Text events
+        elif event.type == BLINK_EVENT:
+            display.action.blink(TEXT_UNPAUSE)
+        elif event.type == TIPS_EVENT:
+            display.tips.change_text(TIPS)
+
+        # Draw it + fps control
+        pyg.display.update()
+        clock.tick(60)  # max 60 fps
+
+    # Clear display
+    display.action.write('')  # Clears action area of display
+    display.status.write(TEXT_INSTRUCTIONS)
+
+
+def fade(clock, bg, status, last_step=FADE_STEPS):
+    """Slowly hides / shows background; used when game ends"""
+
+    pyg.time.set_timer(FADE_EVENT, FADE_SPEED)
+    f_type = 'in' if status == 'win' else 'out'
+    fade_step = 0
+
+    waiting = True
+    while waiting:
+
+        event = pyg.event.poll()
+        if event.type == FADE_EVENT:
+            fade_step += 1
+            bg.fade(f_type, fade_step, last_step, ALL_SPRITES)
+            if fade_step == FADE_STEPS:
+                waiting = False
+
+        pyg.display.update()
+        clock.tick(60)  # max 60 fps
+
+    display.status.write(TEXT_WON) if status == 'win' else display.status.write(TEXT_LOST)
+    pyg.time.set_timer(FADE_EVENT, 0)
+
+
+def explode_effect(screen, clock, mb, deadpool, bg, wave_speed=EXPLODE_WAVE_SPEED):
+    """Kill deadpool cells wave by wave, from the shot outward, flashing each wave before it dies"""
+
+    waves = mb.group_by_wave(deadpool)
+    pyg.time.set_timer(EXPLODE_EVENT, wave_speed)
+
+    flashing = []
+    next_wave = 0
+    waiting = True
+    while waiting:
+
+        event = pyg.event.poll()
+        if event.type == EXPLODE_EVENT:
+            mb.ready_to_die(flashing, True, bg)  # cells flashed last wave now die
+            if next_wave < len(waves):
+                flashing = waves[next_wave]
+                for cell in flashing:
+                    cell.colorate(EXPLODE_FLASH_COLOR)  # brief flash before dying
+                next_wave += 1
             else:
-                info.message_flash('Press SPACE to unpause')
-            info.text_flesh_visible = not info.text_flesh_visible
+                waiting = False
+
+        ALL_SPRITES.clear(screen, bg.act)
+        ALL_SPRITES.draw(screen)
+        pyg.display.update()
+        clock.tick(60)  # max 60 fps
+
+    pyg.time.set_timer(EXPLODE_EVENT, 0)
 
 
-def play():
+def play(screen, display, clock, highscore):
     """Runs the main loop with game"""
-    SCREEN.blit(pyg.Surface((MAXCOL * CELLSIZE, FIELDLENGTH * CELLSIZE)), GAME_FIELD)
-    main_blob = Blob(SCREEN, GAME_FIELD, MAIN_BLOB_MOVE_EVENT, MAIN_BLOB_SPEED)
-    draw_blob(SCREEN, GAME_FIELD, main_blob.content, 0)
-    magazine = Magazine(SCREEN)
-    info.resetscore()
-    info.message('LEFT shoot, RIGHT change')
-    info.message_flash('')
-    if SOUND_BGM_ON:
-        sound_bgm.play(loops=-1)
-    clock = pyg.time.Clock()
 
-    # main cycle #
+    # Game initialization #
+
+    # Events
+    pyg.time.set_timer(MAIN_BLOB_MOVE_EVENT, MAIN_BLOB_SPEED)
+    pyg.time.set_timer(UP_BLOB_MOVE_EVENT, UP_BLOB_SPEED)
+    pyg.time.set_timer(ADD_AMMO_EVENT, ADD_AMMO_SPEED)
+
+    # Game objects
+    mb = Blob(1, LEFTSTICK, BOTTOMSTICK, left=1, top=0, max_rows=MAXROW)
+    ub = UpBlob(-2, UP_LEFTSTICK, UP_BOTTOMSTICK, left=1, top=FIELDLENGTH+2, max_rows=100, width=MAXCOL)
+    deadpool = pyg.sprite.Group()
+    cursor = Point()
+    shooter = Gun(maxammo=6)
+
+    # Sound
+    if SOUND_BGM_ON:
+        SOUND['bg_music'].play(loops=-1)
+
+    # Display
+    bg = Background(screen, MAXCOL + 2, FIELDLENGTH + 2, theme='fantasy', size=CS)
+    score = 0
+    display.magazine.show_ammo(shooter.magazine)
+    display.score.write(score)
+    display.highscore.write(highscore)
+    display.action.write('')  # Clears action area of display
+    display.status.write(TEXT_INSTRUCTIONS)
+    fade_step = 0
+
+    # Main cycle #
     waiting = True
     while waiting:
         event = pyg.event.poll()
-        if event.type == pyg.QUIT:
+
+        # Player controls
+        if event.type == pyg.QUIT:  # end program
             exit()
         elif event.type == pyg.KEYDOWN:
-            if event.key == pyg.K_ESCAPE:
+            if event.key == pyg.K_ESCAPE:  # end program
                 exit()
-        #    if event.key == pyg.K_DOWN:  # for manual testing
-        #        main_blob.move()
-            elif event.key == pyg.K_SPACE:
-                pause_game()
-        elif event.type == ADD_AMMO_EVENT:
-            magazine.add_ammo()
-        elif event.type == MAIN_BLOB_MOVE_EVENT:
-            main_blob.move()
-        elif event.type == LOOSE_EVENT:
-            sound_bgm.stop()
-            if SOUND_EFFECTS_ON:
-                sound_game_over.play()
-            info.message('GAME OVER')
-            magazine.destroy()
-            waiting = False
-        elif event.type == WIN_EVENT:
-            sound_bgm.stop()
-            if SOUND_EFFECTS_ON:
-                sound_win.play()
-            info.message('YOU WON! Congratulations.')
-            magazine.destroy()
-            waiting = False
+            elif event.key == pyg.K_SPACE:  # pause game
+                pause_game(display, clock)
         elif event.type == pyg.MOUSEBUTTONDOWN:
             if event.button == 1:
-                if GAME_FIELD.collidepoint(event.pos):
-                    color = magazine.shoot()
-                    if color is not None:
-                        if main_blob.get_rect().collidepoint(event.pos):
-                            row = event.pos[1] // CELLSIZE - main_blob.top
-                            if event.pos[1] % CELLSIZE > main_blob.row_fraction != 0:
-                                row += 1
-                            info.add_score(main_blob.hit(event.pos[0] // CELLSIZE, row, color))
+                if GAME_FIELD.collidepoint(pyg.mouse.get_pos()):  # shot the gamefield
+                    cursor.update(event.pos)
+                    sc, status, win = shooter.shoot(cursor, mb, ub, deadpool)  # test hit
+                    display.magazine.show_ammo(shooter.magazine)
+                    if sc > 0:  # got some points
+                        score += sc
+                        if score < highscore:
+                            display.score.write(score, color=WHITE)
                         else:
-                            if SOUND_EFFECTS_ON:
-                                sound_miss.play()
-            elif event.button == 3:
-                magazine.reload()
+                            display.score.write(score, color=GREEN)
+                    if SOUND_EFFECTS_ON and SOUND[status]:  # sound ON and effect is defined
+                        SOUND[status].play()
+                    if len(deadpool) > 0:  # cells staged - explode outward from the shot
+                        explode_effect(screen, clock, mb, deadpool, bg)
+                    if win:  # won
+                        pyg.event.post(pyg.event.Event(END_EVENT, {'status': 'win'}))
+                if display.magazine.rect.collidepoint(pyg.mouse.get_pos()):  # reload by clicking magazine
+                    if shooter.change_ammo() == 'reload':
+                        display.magazine.show_ammo(shooter.magazine)
+            if event.button == 3:  # reload by rightclick
+                if shooter.change_ammo() == 'reload':
+                    display.magazine.show_ammo(shooter.magazine)
+
+        # Text events
         elif event.type == TIPS_EVENT:
-            info.message_tips(get_random_tip()[1])
-        clock.tick(60)
+            display.tips.change_text(TIPS)
+
+        # Timed events
+        elif event.type == MAIN_BLOB_MOVE_EVENT:
+            if not mb.move():
+                pyg.event.post(pyg.event.Event(END_EVENT, {'status': 'game_over'}))
+            display.progress.write(str(mb.generated_rows) + ' / ' + str(mb.max_rows))
+        elif event.type == UP_BLOB_MOVE_EVENT:
+            ub = ub.move()
+        elif event.type == ADD_AMMO_EVENT:
+            if shooter.add_ammo() == 'added':
+                display.magazine.show_ammo(shooter.magazine)
+
+        # End of game
+        elif event.type == END_EVENT:
+            SOUND['bg_music'].stop()
+            if SOUND_EFFECTS_ON:
+                SOUND[event.status].play()
+            if event.status == 'win':
+                ub.reset()
+            fade(clock, bg, event.status, FADE_STEPS)
+            waiting = False  # end loop
+
+        # Draws everything
+        if fade_step == 0:  # if game still runs
+            ALL_SPRITES.clear(screen, bg.act)
+            ALL_SPRITES.draw(screen)
+        pyg.display.update()
+        clock.tick(60)  # max 60 fps
+
+    # Game ended
+    pyg.time.set_timer(MAIN_BLOB_MOVE_EVENT, 0)
+    pyg.time.set_timer(UP_BLOB_MOVE_EVENT, 0)
+    pyg.time.set_timer(ADD_AMMO_EVENT, 0)
+    ALL_SPRITES.empty()
+    ALL_SPRITES.add(wall.sprites(), layer=LAYER_WALL)
+
+    return(score)
 
 
 ################
@@ -131,35 +245,46 @@ def play():
 
 # sets up screen and so on - needs code cleaning #
 pyg.event.set_blocked([pyg.MOUSEMOTION, pyg.MOUSEBUTTONUP, pyg.KEYUP])
-SCREEN = init_screen()
-info = Infopanel(SCREEN)
-info.message('Welcome!')
-info.message_flash(TEXT_STARTGAME)
-info.message_tips_header('DID YOU KNOW?')
-info.message_tips(get_random_tip()[1])
+screen = init_screen()
+wall = Wall()
+wall.create_wall(0, 0, width=MAXCOL, height=FIELDLENGTH, image=WALL_IMG, color=WHITE, size=CS)
+wall.draw(screen)
+pyg.display.update()
+clock = pyg.time.Clock()
+display = Infopanel(screen, INFO_LEFT, 1, INFOWIDTH, FIELDLENGTH)
+display.tips_header.write(TEXT_TIPS_HEADER)
+display.tips.change_text(TIPS)
+display.status.write(TEXT_WELCOME)
 
+pyg.time.set_timer(TIPS_EVENT, TIPS_TIME)
+pyg.time.set_timer(BLINK_EVENT, BLINK_TIME)
+highscore = 0
 
 # waiting for starting a game #
 waiting = True
 while waiting:
     event = pyg.event.poll()
 
+    # Player controls
     if event.type == pyg.QUIT:
         exit()
     elif event.type == pyg.KEYDOWN:
         if event.key == pyg.K_ESCAPE:
             exit()
-        elif event.key == pyg.K_SPACE:
-            play()
+        elif event.key == pyg.K_SPACE:  # start game
+            highscore = max(highscore, play(screen, display, clock, highscore))
     elif event.type == pyg.MOUSEBUTTONDOWN:
-        if event.button == 1 or event.button == 3:
+        if event.button == 1 or event.button == 3:  # start game
             if INFO_FIELD.collidepoint(pyg.mouse.get_pos()):
-                play()
-    elif event.type == FLASH_EVENT:
-        if info.text_flesh_visible:
-            info.message_flash('')
-        else:
-            info.message_flash(TEXT_STARTGAME)
-        info.text_flesh_visible = not info.text_flesh_visible
+                highscore = max(highscore, play(screen, display, clock, highscore))
+
+    # Autoevents
+    elif event.type == BLINK_EVENT:
+        display.action.blink(TEXT_STARTGAME)
     elif event.type == TIPS_EVENT:
-        info.message_tips(get_random_tip()[1])
+        display.tips.change_text(TIPS)
+
+    # Draw everything
+    pyg.display.update()
+    clock.tick(60)  # max 60 fps
+
