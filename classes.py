@@ -59,28 +59,28 @@ class Cell(pyg.sprite.Sprite):
         if self.col > 0 and mb.matrix[self.row][self.col - 1] is not None:
             c = mb.matrix[self.row][self.col - 1]
             if c.color == color:  # of right color
-                c.time_to_die = lifetime
+                c.time_to_live = lifetime
                 to_die.append(c)
 
         # Living top neighbour of right color
         if self.row < mb.generated_rows - 1 and mb.matrix[self.row + 1][self.col] is not None:
             c = mb.matrix[self.row + 1][self.col]
             if c.color == color:  # of right color
-                c.time_to_die = lifetime
+                c.time_to_live = lifetime
                 to_die.append(c)
 
         # Living right neighbour of right color
         if self.col < mb.max_cols - 1 and mb.matrix[self.row][self.col + 1] is not None:
             c = mb.matrix[self.row][self.col + 1]
             if c.color == color:  # of right color
-                c.time_to_die = lifetime
+                c.time_to_live = lifetime
                 to_die.append(c)
 
         # Living bottom neighbour of right color
         if self.row > 0 and mb.matrix[self.row - 1][self.col] is not None:
             c = mb.matrix[self.row - 1][self.col]
             if c.color == color:  # of right color
-                c.time_to_die = lifetime
+                c.time_to_live = lifetime
                 to_die.append(c)
 
         if ub.color == color and ub.generated_rows != 0:
@@ -194,6 +194,18 @@ class Blob(pyg.sprite.RenderUpdates):
             score += 1
         return score
 
+    def all_dead(self):
+        """Return True once every generated cell has been killed in the matrix (sprite may linger)"""
+        return all(cell is None for row in self.matrix for cell in row)
+
+    def group_by_wave(self, cells):
+        """Group cells by their explosion wave (time_to_live), ordered from the shot outward"""
+
+        waves = {}
+        for cell in cells:
+            waves.setdefault(cell.time_to_live, []).append(cell)
+        return [waves[wave] for wave in sorted(waves)]
+
 
 class UpBlob(Blob):
     """Blob going upward"""
@@ -306,7 +318,14 @@ class Gun:
 
         return explode_ub
 
-    def shoot(self, cursor, mb, ub, deadpool, background):
+    def shoot(self, cursor, mb, ub, deadpool):
+        """Test the shot for a hit; main-blob cells are staged in deadpool, not killed yet"""
+
+        # The caller is expected to run deadpool through an explosion effect (see
+        # shootris.explode_effect) that kills the cells wave by wave, from the shot outward.
+        # Score and the win check don't need to wait for that: score is just a cell count, and
+        # mb.all_dead() reads the matrix bookkeeping that explode() already updates, independent
+        # of when the cells are actually killed.
         score = 0
         status = None
         print(self.magazine)
@@ -330,7 +349,6 @@ class Gun:
                     print('b', bullet, 'c', mb_hit.color)
                     if mb_hit.color == bullet:  # hit right color
                         upkill = self.explode(mb, ub, deadpool, deque([mb_hit]), bullet)
-                        score += mb.ready_to_die(iter(deadpool), True, background)
                         status = 'hit_success'
                     else:  # hit wrong color
                         status = 'hit_fail'
@@ -344,19 +362,18 @@ class Gun:
                 mb_neighbours = pyg.sprite.groupcollide(mb, ub, 0, 0, collide_cell_touch)  # neighbours of ub
 
                 score += ub.ready_to_die(iter(ub), False)  # destroy cells and count score
-                ub.reset()  # reset ub
 
                 neighbours_to_die = set([cell for cell in mb_neighbours if cell.color == bullet])
                 mb_to_die |= neighbours_to_die
                 self.explode(mb, ub, deadpool, deque(mb_to_die), bullet)
-                if len(deadpool) > 0:
-                    score += mb.ready_to_die(iter(deadpool), True, background)
                 status = 'hit_success'
+
+            score += len(deadpool)  # main-blob cells staged this shot, one point each
         else:
             status = 'empty'
 
         # Check for winning
-        if status == 'hit_success' and mb.max_rows == mb.generated_rows and len(mb.sprites()) == 0:  # mb is destroyed
+        if status == 'hit_success' and mb.max_rows == mb.generated_rows and mb.all_dead():  # mb is destroyed
             win = True
         else:
             win = False

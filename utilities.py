@@ -61,7 +61,6 @@ def get_random_color(colors=COLORS, stop=MAXCOLORS):
     return colors[rnd.randrange(stop)]
 
 
-# still unused
 def change_element(element=None, my_list=TIPS):
     """Return random value of array if it's different from given element, else return next one"""
 

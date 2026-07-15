@@ -98,6 +98,36 @@ def fade(clock, bg, status, last_step=FADE_STEPS):
     pyg.time.set_timer(FADE_EVENT, 0)
 
 
+def explode_effect(screen, clock, mb, deadpool, bg, wave_speed=EXPLODE_WAVE_SPEED):
+    """Kill deadpool cells wave by wave, from the shot outward, flashing each wave before it dies"""
+
+    waves = mb.group_by_wave(deadpool)
+    pyg.time.set_timer(EXPLODE_EVENT, wave_speed)
+
+    flashing = []
+    next_wave = 0
+    waiting = True
+    while waiting:
+
+        event = pyg.event.poll()
+        if event.type == EXPLODE_EVENT:
+            mb.ready_to_die(flashing, True, bg)  # cells flashed last wave now die
+            if next_wave < len(waves):
+                flashing = waves[next_wave]
+                for cell in flashing:
+                    cell.colorate(EXPLODE_FLASH_COLOR)  # brief flash before dying
+                next_wave += 1
+            else:
+                waiting = False
+
+        ALL_SPRITES.clear(screen, bg.act)
+        ALL_SPRITES.draw(screen)
+        pyg.display.update()
+        clock.tick(60)  # max 60 fps
+
+    pyg.time.set_timer(EXPLODE_EVENT, 0)
+
+
 def play(screen, display, clock, highscore):
     """Runs the main loop with game"""
 
@@ -146,7 +176,7 @@ def play(screen, display, clock, highscore):
             if event.button == 1:
                 if GAME_FIELD.collidepoint(pyg.mouse.get_pos()):  # shot the gamefield
                     cursor.update(event.pos)
-                    sc, status, win = shooter.shoot(cursor, mb, ub, deadpool, bg)  # test hit
+                    sc, status, win = shooter.shoot(cursor, mb, ub, deadpool)  # test hit
                     display.magazine.show_ammo(shooter.magazine)
                     if sc > 0:  # got some points
                         score += sc
@@ -156,6 +186,8 @@ def play(screen, display, clock, highscore):
                             display.score.write(score, color=GREEN)
                     if SOUND_EFFECTS_ON and SOUND[status]:  # sound ON and effect is defined
                         SOUND[status].play()
+                    if len(deadpool) > 0:  # cells staged - explode outward from the shot
+                        explode_effect(screen, clock, mb, deadpool, bg)
                     if win:  # won
                         pyg.event.post(pyg.event.Event(END_EVENT, {'status': 'win'}))
                 if display.magazine.rect.collidepoint(pyg.mouse.get_pos()):  # reload by clicking magazine

@@ -61,6 +61,7 @@ COLORS = [RED, GREEN, BLUE, PINK, YELLOW]
 
 
 UP_BLOB_ALPHA = 192
+EXPLODE_FLASH_COLOR = WHITE  # cells flash this color for one wave before the explosion kills them
 CS = 30
 BG_IMG_FOLD = 'backgrounds/'
 TEXT_IMG_FOLD = 'textures/'
@@ -105,15 +106,15 @@ TIPS = [
     'New row is based on the row below it',
     'Right click moves first color in the magazine to the end',
     'You can pause the game with SPACE',
-    'The game can be beated, it is not endless',
+    'The game can be beaten, it is not endless',
     'Highscore lasts only for current session',
     'Game starts by clicking anywhere in right half of screen',
     'Full magazine will not get new colors',
     'ESCAPE will end the game instantly',
     'Up-going blob will destroy covered cells if shot',
-    'Shoot up-going blob to spawn new',
+    'Shoot up-going blob to spawn a new one',
     'If you win, whole background will uncover',
-    'You have to win to enjoy view of backgroung'
+    'You have to win to enjoy view of the background',
     'Shooting up-going blob does not uncover background',
     'You gain one point for any destroyed cell',
     'Up-going blobs are perfect for destroying lonely cells',
@@ -121,7 +122,7 @@ TIPS = [
     'To beat the game destroy all down-going cells',
     'Up-going cells can hit the ceiling, it\'s OK',
     'You lose if any cell from top hits the bottom',
-    'Don\'t conserve ammo, it is not Shadowrun.',
+    'Don\'t conserve ammo, this is not Shadowrun.',
     'You can reload also by clicking / tapping the magazine',
     'This game supports hotseat multiplayer'
 ]
@@ -134,6 +135,7 @@ UP_BLOB_MOVE_EVENT = pyg.USEREVENT + 4
 BLINK_EVENT = pyg.USEREVENT + 5
 TIPS_EVENT = pyg.USEREVENT + 6
 FADE_EVENT = pyg.USEREVENT + 7
+EXPLODE_EVENT = pyg.USEREVENT + 8
 
 
 ############
@@ -164,6 +166,7 @@ MAIN_BLOB_SPEED = 90
 UP_BLOB_SPEED = 40
 BLINK_TIME = 500
 TIPS_TIME = 8000
+EXPLODE_WAVE_SPEED = 45  # ms between explosion waves, from the shot outward
 
 
 ##############
