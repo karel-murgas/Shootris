@@ -20,8 +20,11 @@
 # Libraries #
 #############
 
-from utilities import roll, get_random_color, collide_cell_touch, change_element
-from constants import COLORS, MAXCOLORS
+import pygame as pyg
+
+from utilities import (roll, get_random_color, collide_cell_touch, change_element, apply_color_scheme,
+                       wrap_text, covers_any, touches_any)
+from constants import COLORS, COLOR_SCHEMES, MAXCOLORS, CS
 
 
 ###############
@@ -86,3 +89,71 @@ def test_change_element_avoids_current():
     """change_element never returns the element it was told to avoid"""
     source = ['a', 'b', 'c', 'd']
     assert all(change_element('a', source) != 'a' for _ in range(50))
+
+
+def test_apply_color_scheme_mutates_colors_in_place():
+    """apply_color_scheme swaps the shared COLORS list's contents, so get_random_color follows suit"""
+    try:
+        apply_color_scheme('colorblind')
+        assert COLORS == COLOR_SCHEMES['colorblind']  # same object, new contents
+        allowed = COLOR_SCHEMES['colorblind'][:MAXCOLORS]
+        assert all(get_random_color() in allowed for _ in range(50))
+    finally:
+        apply_color_scheme('standard')  # restore for other tests
+    assert COLORS == COLOR_SCHEMES['standard']
+
+
+def test_wrap_text_fits_each_line_within_width():
+    """Every returned line renders narrower than max_width"""
+    font = pyg.font.SysFont(pyg.font.get_default_font(), 20)
+    text = 'This is a fairly long sentence that should wrap across several lines'
+    max_width = 150
+
+    lines = wrap_text(text, font, max_width)
+
+    assert all(font.size(line)[0] <= max_width for line in lines)
+
+
+def test_wrap_text_preserves_word_order():
+    """Rejoining the wrapped lines reproduces the original words in order"""
+    font = pyg.font.SysFont(pyg.font.get_default_font(), 20)
+    text = 'One two three four five six seven eight nine ten'
+
+    lines = wrap_text(text, font, 100)
+
+    assert ' '.join(lines).split(' ') == text.split(' ')
+
+
+def test_wrap_text_single_line_when_it_fits():
+    """Text narrower than max_width stays on one line"""
+    font = pyg.font.SysFont(pyg.font.get_default_font(), 20)
+
+    lines = wrap_text('Short text', font, 1000)
+
+    assert lines == ['Short text']
+
+
+class RectCell:
+    """Something with a real pygame Rect, which is all covers_any/touches_any read"""
+
+    def __init__(self, left, top):
+        self.rect = pyg.Rect(left, top, CS, CS)
+
+
+def test_covers_any_needs_at_least_half_overlap():
+    """A sliver of overlap is not covering yet; half a cell is"""
+    cell = RectCell(0, 0)
+    barely = RectCell(0, CS - 2)  # 2px of overlap
+    halfway = RectCell(0, CS // 2)  # half a cell of overlap
+
+    assert covers_any([barely], [cell]) is False
+    assert covers_any([halfway], [cell]) is True
+
+
+def test_touches_any_side_but_not_corner():
+    """Side contact counts as touching, corner contact does not"""
+    cell = RectCell(0, 0)
+
+    assert touches_any([RectCell(CS, 0)], [cell]) is True  # side
+    assert touches_any([RectCell(CS, CS)], [cell]) is False  # corner
+    assert touches_any([RectCell(3 * CS, 0)], [cell]) is False  # far away

@@ -61,6 +61,11 @@ def get_random_color(colors=COLORS, stop=MAXCOLORS):
     return colors[rnd.randrange(stop)]
 
 
+def apply_color_scheme(name, colors=COLORS, schemes=COLOR_SCHEMES):
+    """Switch the active color list in place to the named scheme (e.g. 'colorblind')"""
+    colors[:] = schemes[name]
+
+
 def change_element(element=None, my_list=TIPS):
     """Return random value of array if it's different from given element, else return next one"""
 
@@ -68,3 +73,33 @@ def change_element(element=None, my_list=TIPS):
     if my_list[num] == element:
         num = (num + 1) % len(my_list)
     return my_list[num]
+
+
+def covers_any(coverers, cells, size=CS):
+    """True once any coverer overlaps any cell by at least half a cell vertically"""
+
+    return any(c.rect.colliderect(m.rect) and abs(c.rect.top - m.rect.top) <= size // 2
+               for c in coverers for m in cells)
+
+
+def touches_any(touchers, cells):
+    """True once any toucher touches (side or overlap, not corner) any of the cells"""
+
+    return any(collide_cell_touch(t, m) for t in touchers for m in cells)
+
+
+def wrap_text(text, font, max_width):
+    """Split text into lines that each render narrower than max_width in the given font"""
+
+    lines = []
+    words = text.split(' ')
+    line = words[0]
+    for word in words[1:]:
+        candidate = line + ' ' + word
+        if font.size(candidate)[0] <= max_width:
+            line = candidate
+        else:
+            lines.append(line)
+            line = word
+    lines.append(line)
+    return lines
