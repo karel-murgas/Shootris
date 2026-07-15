@@ -98,6 +98,122 @@ def fade(clock, bg, status, last_step=FADE_STEPS):
     pyg.time.set_timer(FADE_EVENT, 0)
 
 
+def image_label(filename):
+    """Turn a background filename into a display label, e.g. 'pirate.jpg' -> 'Pirate'"""
+    return filename.rsplit('.', 1)[0].capitalize()
+
+
+def run_settings_menu(screen, clock, defaults):
+    """Blocking full-window settings screen: pick background theme/image and color scheme, then START GAME"""
+
+    themes = ['random'] + sorted(BACKGROUNDS)
+    theme_option = MenuOption('Theme', themes, labels=[t.capitalize() for t in themes])
+    if defaults['theme'] in themes:
+        theme_option.index = themes.index(defaults['theme'])
+
+    color_choices = ['standard', 'colorblind']
+    color_option = MenuOption('Colors', color_choices, labels=[c.capitalize() for c in color_choices])
+    if defaults['color_scheme'] in color_choices:
+        color_option.index = color_choices.index(defaults['color_scheme'])
+
+    image_options = {}  # theme name -> its MenuOption, built lazily and remembered while cycling themes
+
+    def image_option_for(theme):
+        if theme not in image_options:
+            choices = ['random'] + BACKGROUNDS[theme]
+            option = MenuOption('Image', choices, labels=['Random'] + [image_label(c) for c in BACKGROUNDS[theme]])
+            if theme == defaults['theme'] and defaults['image'] in choices:
+                option.index = choices.index(defaults['image'])
+            image_options[theme] = option
+        return image_options[theme]
+
+    def current_options():
+        options = [theme_option]
+        if theme_option.value != 'random':
+            options.append(image_option_for(theme_option.value))
+        options.append(color_option)
+        return options
+
+    menu = Menu(screen, screen.get_rect(), options=current_options(), actions=['START GAME'], title='SHOOTRIS')
+
+    waiting = True
+    while waiting:
+        event = pyg.event.poll()
+        changed = False
+
+        if event.type == pyg.QUIT:
+            exit()
+        elif event.type == pyg.KEYDOWN:
+            if event.key == pyg.K_ESCAPE:
+                exit()
+            elif event.key == pyg.K_UP:
+                menu.move(-1)
+            elif event.key == pyg.K_DOWN:
+                menu.move(1)
+            elif event.key == pyg.K_LEFT:
+                menu.change(-1)
+                changed = True
+            elif event.key == pyg.K_RIGHT:
+                menu.change(1)
+                changed = True
+            elif event.key in (pyg.K_RETURN, pyg.K_SPACE):
+                if menu.activate() == 'START GAME':
+                    waiting = False
+        elif event.type == pyg.MOUSEBUTTONDOWN and event.button == 1:
+            action = menu.click(event.pos)
+            changed = True
+            if action == 'START GAME':
+                waiting = False
+
+        if changed and waiting:
+            menu.options = current_options()
+            menu.layout()
+
+        if waiting:
+            menu.draw()  # every frame, so hover highlighting follows the mouse live
+            pyg.display.update()
+        clock.tick(60)  # max 60 fps
+
+    return {
+        'theme': theme_option.value,
+        'image': image_options[theme_option.value].value if theme_option.value != 'random' else 'random',
+        'color_scheme': color_option.value,
+    }
+
+
+def run_end_screen(screen, clock):
+    """Blocking modal after a round ends: REPLAY or RETURN TO MENU, final frame stays frozen behind it"""
+
+    panel_rect = pyg.Rect(0, 0, 340, 180)
+    panel_rect.center = screen.get_rect().center
+    menu = Menu(screen, panel_rect, actions=['REPLAY', 'RETURN TO MENU'])
+
+    choice = None
+    while choice is None:
+        event = pyg.event.poll()
+
+        if event.type == pyg.QUIT:
+            exit()
+        elif event.type == pyg.KEYDOWN:
+            if event.key == pyg.K_ESCAPE:
+                exit()
+            elif event.key == pyg.K_UP:
+                menu.move(-1)
+            elif event.key == pyg.K_DOWN:
+                menu.move(1)
+            elif event.key in (pyg.K_RETURN, pyg.K_SPACE):
+                choice = menu.activate()
+        elif event.type == pyg.MOUSEBUTTONDOWN and event.button == 1:
+            choice = menu.click(event.pos)
+
+        if choice is None:
+            menu.draw()  # every frame, so hover highlighting follows the mouse live
+            pyg.display.update()
+        clock.tick(60)  # max 60 fps
+
+    return 'replay' if choice == 'REPLAY' else 'menu'
+
+
 def explode_effect(screen, clock, mb, deadpool, bg, wave_speed=EXPLODE_WAVE_SPEED):
     """Kill deadpool cells wave by wave, from the shot outward, flashing each wave before it dies"""
 
@@ -128,7 +244,7 @@ def explode_effect(screen, clock, mb, deadpool, bg, wave_speed=EXPLODE_WAVE_SPEE
     pyg.time.set_timer(EXPLODE_EVENT, 0)
 
 
-def play(screen, display, clock, highscore):
+def play(screen, display, clock, highscore, settings):
     """Runs the main loop with game"""
 
     # Game initialization #
@@ -150,7 +266,7 @@ def play(screen, display, clock, highscore):
         SOUND['bg_music'].play(loops=-1)
 
     # Display
-    bg = Background(screen, MAXCOL + 2, FIELDLENGTH + 2, theme='fantasy', size=CS)
+    bg = Background(screen, MAXCOL + 2, FIELDLENGTH + 2, theme=settings['theme'], pic=settings['image'], size=CS)
     score = 0
     display.magazine.show_ammo(shooter.magazine)
     display.score.write(score)
@@ -236,7 +352,8 @@ def play(screen, display, clock, highscore):
     ALL_SPRITES.empty()
     ALL_SPRITES.add(wall.sprites(), layer=LAYER_WALL)
 
-    return(score)
+    choice = run_end_screen(screen, clock)
+    return score, choice
 
 
 ################
@@ -254,37 +371,19 @@ clock = pyg.time.Clock()
 display = Infopanel(screen, INFO_LEFT, 1, INFOWIDTH, FIELDLENGTH)
 display.tips_header.write(TEXT_TIPS_HEADER)
 display.tips.change_text(TIPS)
-display.status.write(TEXT_WELCOME)
 
 pyg.time.set_timer(TIPS_EVENT, TIPS_TIME)
 pyg.time.set_timer(BLINK_EVENT, BLINK_TIME)
 highscore = 0
+settings = {'theme': 'random', 'image': 'random', 'color_scheme': 'standard'}
 
-# waiting for starting a game #
-waiting = True
-while waiting:
-    event = pyg.event.poll()
-
-    # Player controls
-    if event.type == pyg.QUIT:
-        exit()
-    elif event.type == pyg.KEYDOWN:
-        if event.key == pyg.K_ESCAPE:
-            exit()
-        elif event.key == pyg.K_SPACE:  # start game
-            highscore = max(highscore, play(screen, display, clock, highscore))
-    elif event.type == pyg.MOUSEBUTTONDOWN:
-        if event.button == 1 or event.button == 3:  # start game
-            if INFO_FIELD.collidepoint(pyg.mouse.get_pos()):
-                highscore = max(highscore, play(screen, display, clock, highscore))
-
-    # Autoevents
-    elif event.type == BLINK_EVENT:
-        display.action.blink(TEXT_STARTGAME)
-    elif event.type == TIPS_EVENT:
-        display.tips.change_text(TIPS)
-
-    # Draw everything
-    pyg.display.update()
-    clock.tick(60)  # max 60 fps
+# settings menu <-> play loop #
+while True:
+    settings = run_settings_menu(screen, clock, settings)
+    apply_color_scheme(settings['color_scheme'])
+    replaying = True
+    while replaying:
+        score, choice = play(screen, display, clock, highscore, settings)
+        highscore = max(highscore, score)
+        replaying = (choice == 'replay')
 

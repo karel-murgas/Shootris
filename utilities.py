@@ -61,6 +61,11 @@ def get_random_color(colors=COLORS, stop=MAXCOLORS):
     return colors[rnd.randrange(stop)]
 
 
+def apply_color_scheme(name, colors=COLORS, schemes=COLOR_SCHEMES):
+    """Switch the active color list in place to the named scheme (e.g. 'colorblind')"""
+    colors[:] = schemes[name]
+
+
 def change_element(element=None, my_list=TIPS):
     """Return random value of array if it's different from given element, else return next one"""
 

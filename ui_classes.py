@@ -92,6 +92,158 @@ class Label:
         self.screen.blit(surf, ((self.left + l_shift) * CS, (self.top + t_shift) * CS))
 
 
+class Button:
+    """A clickable rectangle with a label, highlighted on hover or keyboard focus"""
+
+    def __init__(self, screen, rect, text, fill=MENU_BUTTON_FILL, hover_fill=GREEN,
+                 border=WHITE, text_color=WHITE, font_size=CS):
+        self.screen = screen
+        self.rect = rect
+        self.text = text
+        self.fill = fill
+        self.hover_fill = hover_fill
+        self.border = border
+        self.text_color = text_color
+        self.font_size = font_size
+
+    def draw(self, focused=False):
+        """Fill + border + centered text; uses hover_fill when focused"""
+        pyg.draw.rect(self.screen, self.hover_fill if focused else self.fill, self.rect)
+        pyg.draw.rect(self.screen, self.border, self.rect, 2)
+        font = pyg.font.SysFont(pyg.font.get_default_font(), self.font_size)
+        text_surf = font.render(self.text, True, self.text_color)
+        self.screen.blit(text_surf, text_surf.get_rect(center=self.rect.center))
+
+    def is_hovered(self, pos):
+        """Whether pos (mouse coordinates) is inside this button"""
+        return self.rect.collidepoint(pos)
+
+
+class Menu:
+    """A self-contained settings screen or modal: title + MenuOption rows + action buttons.
+
+    Owns a rectangle (the whole window for a full settings screen, or a small centered panel
+    for a modal) and repaints that whole rectangle on every draw() - a shrinking row count can
+    never leave stale pixels behind, since nothing outside a full wipe-and-redraw is relied on.
+    """
+
+    def __init__(self, screen, rect, options=None, actions=None, title=None,
+                 row_height=50, spacing=16, chevron_width=44, label_ratio=0.4):
+        self.screen = screen
+        self.rect = rect
+        self.options = options if options else []
+        self.actions = actions if actions else []
+        self.title = title
+        self.row_height = row_height
+        self.spacing = spacing
+        self.chevron_width = chevron_width
+        self.label_ratio = label_ratio
+        self.focus = 0
+        self.rows = []  # (label_rect, left_button, right_button, value_rect) per option
+        self.action_buttons = []
+        self.layout()
+
+    def row_count(self):
+        """Total navigable rows: options followed by actions"""
+        return len(self.options) + len(self.actions)
+
+    def layout(self):
+        """(Re)computes every row/button rect from self.rect - call after changing options/actions.
+
+        Content is capped to a comfortable max width and centered both horizontally and vertically
+        within self.rect, so a Menu can own anything from a small modal panel to the whole window.
+        """
+        title_h = self.row_height + self.spacing if self.title else 0
+        content_width = min(self.rect.width - 2 * self.spacing, 520)
+        content_left = self.rect.centerx - content_width // 2
+        content_height = title_h + self.row_count() * (self.row_height + self.spacing) - self.spacing
+        top = self.rect.centery - content_height // 2
+        self.title_top = top
+        top += title_h
+
+        self.rows = []
+        for _ in self.options:
+            row_rect = pyg.Rect(content_left, top, content_width, self.row_height)
+            label_width = int(content_width * self.label_ratio)
+            label_rect = pyg.Rect(row_rect.left, row_rect.top, label_width, self.row_height)
+            control_rect = pyg.Rect(row_rect.left + label_width, row_rect.top,
+                                     row_rect.width - label_width, self.row_height)
+            left_btn = Button(self.screen, pyg.Rect(control_rect.left, control_rect.top,
+                                                      self.chevron_width, self.row_height), '<')
+            right_btn = Button(self.screen, pyg.Rect(control_rect.right - self.chevron_width, control_rect.top,
+                                                      self.chevron_width, self.row_height), '>')
+            value_rect = pyg.Rect(control_rect.left + self.chevron_width, control_rect.top,
+                                   control_rect.width - 2 * self.chevron_width, self.row_height)
+            self.rows.append((label_rect, left_btn, right_btn, value_rect))
+            top += self.row_height + self.spacing
+
+        self.action_buttons = []
+        for action in self.actions:
+            btn_rect = pyg.Rect(content_left, top, content_width, self.row_height)
+            self.action_buttons.append(Button(self.screen, btn_rect, action))
+            top += self.row_height + self.spacing
+
+        self.focus = min(self.focus, self.row_count() - 1)
+
+    def draw(self):
+        """Wipe self.rect and redraw the title, option rows and action buttons from scratch"""
+        pyg.draw.rect(self.screen, MENU_BG, self.rect)
+        pyg.draw.rect(self.screen, WHITE, self.rect, 3)
+
+        font = pyg.font.SysFont(pyg.font.get_default_font(), CS)
+        if self.title:
+            title_surf = font.render(self.title, True, WHITE)
+            self.screen.blit(title_surf, title_surf.get_rect(midtop=(self.rect.centerx, self.title_top)))
+
+        mouse_pos = pyg.mouse.get_pos()
+        for i, (option, (label_rect, left_btn, right_btn, value_rect)) in enumerate(zip(self.options, self.rows)):
+            row_focused = (i == self.focus)
+            label_surf = font.render(option.name, True, GREEN if row_focused else WHITE)
+            self.screen.blit(label_surf, label_surf.get_rect(midleft=(label_rect.left, label_rect.centery)))
+
+            left_btn.draw(focused=row_focused or left_btn.is_hovered(mouse_pos))
+            right_btn.draw(focused=row_focused or right_btn.is_hovered(mouse_pos))
+
+            value_surf = font.render(str(option.label), True, WHITE)
+            self.screen.blit(value_surf, value_surf.get_rect(center=value_rect.center))
+
+        for i, button in enumerate(self.action_buttons):
+            row_focused = (i + len(self.options) == self.focus)
+            button.draw(focused=row_focused or button.is_hovered(mouse_pos))
+
+    def move(self, direction):
+        """Change focused row, wrapping around"""
+        self.focus = (self.focus + direction) % self.row_count()
+
+    def change(self, direction):
+        """Cycle the focused row's option value, if it is an option row"""
+        if self.focus < len(self.options):
+            self.options[self.focus].cycle(direction)
+
+    def activate(self):
+        """Return the focused action, if the focused row is an action row, else None"""
+        if self.focus >= len(self.options):
+            return self.actions[self.focus - len(self.options)]
+        return None
+
+    def click(self, pos):
+        """Handle a mouse click at pos: cycle a chevron, or return the clicked action"""
+        for i, (label_rect, left_btn, right_btn, value_rect) in enumerate(self.rows):
+            if left_btn.is_hovered(pos):
+                self.focus = i
+                self.options[i].cycle(-1)
+                return None
+            if right_btn.is_hovered(pos):
+                self.focus = i
+                self.options[i].cycle(1)
+                return None
+        for i, button in enumerate(self.action_buttons):
+            if button.is_hovered(pos):
+                self.focus = i + len(self.options)
+                return self.actions[i]
+        return None
+
+
 class Magazine(Label):
     """Displays status of magazine"""
 
@@ -121,13 +273,13 @@ class Background:
         self.redraw(self.clear)  # clear gamefield
 
     def load_image(self, path, theme, pic, source):
-        """Load background image - randomly or with given theme / picture"""
+        """Load background image - randomly or with given theme / picture filename"""
 
         if theme == 'random':
             theme = rnd.choice(list(source))
         if pic == 'random':
-            pic = rnd.randrange(len(source[theme]))
-        return pyg.image.load(path + theme + '/' + source[theme][pic])
+            pic = rnd.choice(source[theme])
+        return pyg.image.load(path + theme + '/' + pic)
 
     def reveal(self, rect):
         """Reveal background in the area of destroyed cells"""

@@ -20,6 +20,7 @@
 # Libraries #
 #############
 
+import os
 import pygame as pyg
 
 
@@ -55,13 +56,17 @@ WHITE = (255, 255, 255)
 YELLOW = (128, 128, 0)
 PINK = (128, 0, 128)
 BLACK = (0, 0, 0)
-COLORS = [RED, GREEN, BLUE, PINK, YELLOW]
-# Only as a option for colorblind people
-# COLORS = [cb['red'], cb['green'], cb['blue_dark'], cb['pink'], cb['yellow'], cb['blue_light']]
+COLOR_SCHEMES = {
+    'standard': [RED, GREEN, BLUE, PINK, YELLOW],
+    'colorblind': [cb['red'], cb['green'], cb['blue_dark'], cb['pink'], cb['yellow'], cb['blue_light']],
+}
+COLORS = list(COLOR_SCHEMES['standard'])  # mutated in place by apply_color_scheme()
 
 
 UP_BLOB_ALPHA = 192
 EXPLODE_FLASH_COLOR = WHITE  # cells flash this color for one wave before the explosion kills them
+MENU_BG = (24, 24, 30)  # dedicated menu screens' background, distinct from the game field's black
+MENU_BUTTON_FILL = (45, 45, 54)  # unfocused button fill; GREEN is used for hover/keyboard focus
 CS = 30
 BG_IMG_FOLD = 'backgrounds/'
 TEXT_IMG_FOLD = 'textures/'
@@ -69,11 +74,11 @@ IMG_FOLD = 'images/'
 WALL_IMG = 'squares_big_black.gif'
 BLOB_IMG = 'squares_many_black.gif'
 UP_IMG = 'squares_big_white.gif'
-BACKGROUNDS = {
-    'girls': ['bed.jpg', 'blond.jpg', 'bent.jpg'],
-    'cats': ['double.jpg', 'white.jpg', 'beige.jpg'],
-    'fantasy': ['pirate.jpg', 'vampire.jpg', 'warrior.jpg', 'ranger.jpg']
-}
+BACKGROUNDS = {}  # theme folder name -> sorted list of image filenames, scanned from disk
+for _theme in sorted(os.listdir(IMG_FOLD + BG_IMG_FOLD)):
+    _theme_path = IMG_FOLD + BG_IMG_FOLD + _theme
+    if os.path.isdir(_theme_path):
+        BACKGROUNDS[_theme] = sorted(os.listdir(_theme_path))
 LAYER_WALL = 3  # most visible
 LAYER_UP = 2
 LAYER_MAIN = 1  # most hidden
@@ -94,7 +99,6 @@ SOUND = {
 }
 
 # Texts #
-TEXT_STARTGAME = 'CLICK HERE or press SPACE'
 TEXT_TIPS_HEADER = 'DID YOU KNOW?'
 TEXT_WELCOME = 'Welcome!'
 TEXT_PAUSE_INFO = 'The game is PAUSED'
@@ -175,6 +179,5 @@ EXPLODE_WAVE_SPEED = 45  # ms between explosion waves, from the shot outward
 
 GAME_FIELD = pyg.Rect(1 * CS, 1 * CS, MAXCOL * CS, FIELDLENGTH * CS)  # used for background
 INFO_LEFT = MAXCOL + 2
-INFO_FIELD = pyg.Rect((MAXCOL + 2) * CS, 1 * CS, INFOWIDTH * CS, FIELDLENGTH * CS)  # used for interaction with info field
 ALL_SPRITES = pyg.sprite.LayeredUpdates()  # Group for updating gamefield
 FADE_SPEED = 3000 // FADE_STEPS

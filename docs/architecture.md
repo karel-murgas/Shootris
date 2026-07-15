@@ -10,11 +10,13 @@ constants.py  →  utilities.py  →  classes.py  →  ui_classes.py  →  shoot
 - **`constants.py`** — pygame init, colors, image/sound paths, `SOUND` dict, all `TEXT_*` strings,
   the `TIPS` list, custom pygame user events (`END_EVENT`, `MAIN_BLOB_MOVE_EVENT`, etc.), gameplay
   tuning constants (`MAXCOL`, `MAXROW`, `MAXAMMO`, `*_SPEED`, `*STICK` probabilities), and derived
-  globals (`GAME_FIELD`, `INFO_FIELD`, `ALL_SPRITES`). This is the single place to tune game feel.
+  globals (`GAME_FIELD`, `ALL_SPRITES`). This is the single place to tune game feel.
 - **`utilities.py`** — small free functions: `collide_cell_touch` (custom pygame collision predicate,
   side/overlap touch but not corner touch), `roll` (probability check), `get_random_color`,
   `change_element` (pick a different random element, used for cycling tips).
 - **`classes.py`** — game/simulation logic, no rendering decisions beyond blitting cell surfaces:
+  - `MenuOption` — one cyclable settings row (name + choices + current index), no pygame
+    dependency; used by `ui_classes.Menu` to back the settings/end-of-round screens.
   - `Cell` — one grid square; tracks `col`/`row` (matrix position) separately from `rect`
     (pixel position = grid position × `CS`); `rat_neighbour` looks up same-color living neighbours.
   - `Blob` (`pyg.sprite.RenderUpdates`) — the main blob. Owns `matrix`, a list-of-rows of `Cell` or
@@ -26,10 +28,13 @@ constants.py  →  utilities.py  →  classes.py  →  ui_classes.py  →  shoot
   - `Gun` — magazine (`deque` of colors) and `shoot()` / `explode()` (see below) / `add_ammo()` /
     `change_ammo()`.
 - **`ui_classes.py`** — `Infopanel`, `Label`, `Magazine`, `Background` (theme art, fade in/out,
-  progressive reveal of the picture behind destroyed cells).
-- **`shootris.py`** — entry point: builds the screen and wall once, then loops between an
-  "attract/start" event loop and `play()`, which runs the actual game's event loop
-  (player input, timed move/spawn events, end-of-game fade, redraw + `clock.tick(60)`).
+  progressive reveal of the picture behind destroyed cells), `Menu` (renders a list of
+  `MenuOption` rows plus plain action rows, drives selection/cycling, used for both the
+  pre-game settings screen and the end-of-round REPLAY / RETURN TO MENU screen).
+- **`shootris.py`** — entry point: builds the screen and wall once, then loops between
+  `run_settings_menu()` (pick background theme/image and color scheme) and `play()`, which
+  runs the actual game's event loop (player input, timed move/spawn events, end-of-game fade,
+  `run_end_screen()`, redraw + `clock.tick(60)`).
 
 ## Coordinate system
 

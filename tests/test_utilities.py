@@ -20,8 +20,8 @@
 # Libraries #
 #############
 
-from utilities import roll, get_random_color, collide_cell_touch, change_element
-from constants import COLORS, MAXCOLORS
+from utilities import roll, get_random_color, collide_cell_touch, change_element, apply_color_scheme
+from constants import COLORS, COLOR_SCHEMES, MAXCOLORS
 
 
 ###############
@@ -86,3 +86,15 @@ def test_change_element_avoids_current():
     """change_element never returns the element it was told to avoid"""
     source = ['a', 'b', 'c', 'd']
     assert all(change_element('a', source) != 'a' for _ in range(50))
+
+
+def test_apply_color_scheme_mutates_colors_in_place():
+    """apply_color_scheme swaps the shared COLORS list's contents, so get_random_color follows suit"""
+    try:
+        apply_color_scheme('colorblind')
+        assert COLORS == COLOR_SCHEMES['colorblind']  # same object, new contents
+        allowed = COLOR_SCHEMES['colorblind'][:MAXCOLORS]
+        assert all(get_random_color() in allowed for _ in range(50))
+    finally:
+        apply_color_scheme('standard')  # restore for other tests
+    assert COLORS == COLOR_SCHEMES['standard']

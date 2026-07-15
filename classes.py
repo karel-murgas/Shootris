@@ -28,6 +28,30 @@ from utilities import *
 # Classes definitions #
 #######################
 
+class MenuOption:
+    """One cyclable settings row in a menu, e.g. background theme or color scheme"""
+
+    def __init__(self, name, choices, labels=None):
+        self.name = name
+        self.choices = choices
+        self.labels = labels if labels else [str(choice) for choice in choices]
+        self.index = 0
+
+    def cycle(self, direction):
+        """Move to the next (or previous) choice, wrapping around"""
+        self.index = (self.index + direction) % len(self.choices)
+
+    @property
+    def value(self):
+        """Currently selected raw choice"""
+        return self.choices[self.index]
+
+    @property
+    def label(self):
+        """Currently selected choice's display text"""
+        return self.labels[self.index]
+
+
 class Cell(pyg.sprite.Sprite):
     """Default class for all cells"""
 
