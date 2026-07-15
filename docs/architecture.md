@@ -77,24 +77,42 @@ on every discovery, so a later, larger stamp can overwrite an earlier, correct, 
 clean concentric waves, stamp only once (e.g. only if the cell doesn't already have a smaller
 `time_to_live`) or compute the wave from the parent at dequeue time instead of at enqueue time.
 
-## Current branch: `new_core_code`
+## Tutorial (`run_tutorial` in `shootris.py`)
 
-Goal (per the user, not yet implemented): when a blob explodes, cells should die starting from the
-shot origin and progressively outward, with a small per-wave delay and a graphical effect, instead
-of the whole same-color region vanishing in one frame.
+Launched from the settings menu's TUTORIAL button. One continuous game on a **prebuilt board**
+(`TUT_MB_SCRIPT` in `constants.py`, spawned row-by-row by `classes.ScriptedBlob`), with **scripted
+ammo arrivals** (`TUT_AMMO`, served by `Gun(script=...)`) — so to the player it looks like a normal
+game, except the tutorial alternates two loop primitives:
 
-The BFS in `Gun.explode` now correctly computes the wave number needed for this (`cell.time_to_live`,
-fixed 2026-07-15 — see above). What's missing is turning it into staggered kills: roughly, group
-`deadpool` by `time_to_live`, and release one wave per tick of a new timer event (similar to
-`FADE_EVENT`/`fade()` in `shootris.py`, which already staggers a multi-step visual over time and is
-the closest existing pattern to imitate) instead of calling `ready_to_die()` once with the whole
-pool. A per-cell flash/brighten effect before killing (mentioned as a TODO in `Shootris_notes.txt`:
-"When destroying cell, brighter flash for a moment (50ms?)") fits naturally into the same
-staggered-wave mechanism. Read the re-stamping caveat above before relying on `time_to_live` as-is.
+- `tutorial_watch` — the real timers run (blob sinks, up-blob climbs, bullets arrive) with the
+  taught feature highlighted by `TutorialOverlay`; ends on a **state condition** (rows spawned,
+  magazine full, up-blob overlap), never wall-clock, so it is FPS/jitter-tolerant.
+- `tutorial_act` — all timers frozen; only the taught action is accepted. Misclicks are inert
+  (`require_front` gates on the front bullet color, `require_target` on what the click hits, and a
+  rejected click never consumes a bullet) — this is what makes the scripted ammo plan soft-lock-proof.
 
-Also relevant: `Blob.ready_to_die()` has a standing TODO/bug noting the game briefly freezes the
-first time it's called for a nontrivial number of cells, cause unknown — worth keeping an eye on
-once this method is reworked to be wave-based, since the freeze may or may not survive the rewrite.
+The board layout is *authored around the lessons* and `tests/test_tutorial_script.py` pins its
+invariants: color 0 forms the single first-shot region **and must be extinct afterwards** (the
+waste-a-useless-bullet lesson requires that its front bullet can never `hit_success`); color 2
+forms exactly the two blocks the second up-blob bridges; color 4 never appears on the board (it's
+the first up-blob's color, so shooting it can't chain). If you edit `TUT_MB_SCRIPT`/`TUT_AMMO`,
+run those tests, then replay the timing harness idea: emulate timer cadence in virtual time and
+check the up-blob meets the leftover cells *during* its approach watch, not before (tuned via
+`TUT_UP_BLOB_SPEED`; the bridge run uses `TUT_UP_FAST_SPEED`).
 
-There is currently no diff between `master` and `new_core_code` in the actual code (git history is
-identical) — the feature has not been started yet in this branch.
+## Wave-based explosion effect (implemented)
+
+The staggered-kill goal once tracked here as an unstarted "current branch" goal is done
+(`8e3f20f`, "Implement wave-based explosion effect and refactor shot mechanics"): cells now die
+starting from the shot origin and progressively outward, instead of the whole same-color region
+vanishing in one frame. `Gun.shoot()`/`Gun.explode()` only stage hits into `deadpool`;
+`shootris.explode_effect()` groups it by `cell.time_to_live` (`Blob.group_by_wave`) and releases
+one wave per `EXPLODE_EVENT` tick (`EXPLODE_WAVE_SPEED`; the same timer-staggered-over-time pattern
+as `FADE_EVENT`/`fade()`), flashing each wave `EXPLODE_FLASH_COLOR` for one tick (the
+"brighter flash" TODO from `Shootris_notes.txt`) before killing it via `Blob.ready_to_die()`. Read
+the re-stamping caveat above before relying on `time_to_live` from a differently-shaped BFS.
+
+Still open: `Blob.ready_to_die()` has a standing TODO/bug noting the game briefly freezes the first
+time it's called for a nontrivial number of cells, cause unknown. This predates the wave rework and
+hasn't been re-verified since — worth checking whether it survives now that each call only handles
+one wave's worth of cells instead of a whole deadpool at once.

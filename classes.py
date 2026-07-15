@@ -222,6 +222,10 @@ class Blob(pyg.sprite.RenderUpdates):
         """Return True once every generated cell has been killed in the matrix (sprite may linger)"""
         return all(cell is None for row in self.matrix for cell in row)
 
+    def colors_present(self):
+        """Set of colors still carried by living cells in the matrix"""
+        return set(cell.color for row in self.matrix for cell in row if cell is not None)
+
     def group_by_wave(self, cells):
         """Group cells by their explosion wave (time_to_live), ordered from the shot outward"""
 
@@ -229,6 +233,80 @@ class Blob(pyg.sprite.RenderUpdates):
         for cell in cells:
             waves.setdefault(cell.time_to_live, []).append(cell)
         return [waves[wave] for wave in sorted(waves)]
+
+    def connected_same_color(self, cell):
+        """Living cells connected to `cell` (itself included) sharing its color - what one shot would take"""
+
+        region = []
+        seen = {(cell.row, cell.col)}
+        queue = deque([cell])
+        while queue:
+            c = queue.popleft()
+            region.append(c)
+            for dr, dc in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                r, k = c.row + dr, c.col + dc
+                if 0 <= r < len(self.matrix) and 0 <= k < self.max_cols and (r, k) not in seen:
+                    n = self.matrix[r][k]
+                    if n is not None and n.color == cell.color:
+                        seen.add((r, k))
+                        queue.append(n)
+        return region
+
+    def load_layout(self, layout, left, top_row, image=BLOB_IMG, alpha=255):
+        """Build a fixed, non-growing blob from rows of colors (None = empty). For tutorials.
+
+        `layout` rows are given top-to-bottom as on screen; matrix row indices grow upward,
+        so the first row written ends up as the highest matrix row.
+        """
+
+        height = len(layout)
+        width = len(layout[0])
+        self.left = left
+        self.top = top_row
+        self.max_cols = width
+        self.matrix = [[None] * width for _ in range(height)]
+
+        for i, colors_row in enumerate(layout):
+            row = height - 1 - i
+            for col, color in enumerate(colors_row):
+                if color is None:
+                    continue
+                where = pyg.Surface((CS, CS))
+                cell = Cell(where, (left + col) * CS, (top_row + i) * CS, col, row, self.layer, alpha)
+                cell.colorate(color)  # explicit color, never the random generate_cell_color path
+                if image is not None:
+                    cell.load_image(image)
+                self.add(cell)
+                self.matrix[row][col] = cell
+
+        self.generated_rows = height
+        self.max_rows = height
+
+
+class ScriptedBlob(Blob):
+    """Blob whose rows come from a prebuilt plan instead of random generation - used by the tutorial"""
+
+    def __init__(self, script, direction=1, left=1, top=0, layer=LAYER_MAIN):
+        Blob.__init__(self, direction, 0, 0, left, top, max_rows=len(script), max_cols=len(script[0]), layer=layer)
+        self.script = deque(script)
+
+    def add_row(self, image=None):
+        """Spawn the next planned row with explicit colors; consumes no randomness"""
+
+        colors = self.script.popleft()
+        self.matrix.append([])
+        for i, color in enumerate(colors):
+            if color is None:
+                self.matrix[self.generated_rows].append(None)
+                continue
+            where = pyg.Surface((CS, CS))
+            cell = Cell(where, (self.left + i) * CS, self.top * CS, i, self.generated_rows, self.layer)
+            cell.colorate(color)
+            if image is not None:
+                cell.load_image(image)
+            self.add(cell)
+            self.matrix[self.generated_rows].append(cell)
+        self.generated_rows += 1
 
 
 class UpBlob(Blob):
@@ -320,9 +398,11 @@ class Wall(pyg.sprite.Group):
 class Gun:
     """Define attributes and methods used for shooting"""
 
-    def __init__(self, maxammo=MAXAMMO):
+    def __init__(self, maxammo=MAXAMMO, restrict_final_colors=False, script=None):
         self.maxammo = maxammo
+        self.restrict_final_colors = restrict_final_colors
         self.magazine = deque([])
+        self.script = deque(script) if script else deque([])  # planned bullet arrivals, used by the tutorial
 
     def explode(self, mb, ub, deadpool, to_die, color):
         """Breadth-first search to identify all cells with the same color and return their distance from hit"""
@@ -404,9 +484,20 @@ class Gun:
 
         return score, status, win
 
-    def add_ammo(self):
+    def pick_ammo_color(self, mb, ub=None):
+        """Pick a bullet color; once mb's last row has spawned, optionally restrict to colors still on it (plus ub's, so the up-blob stays a valid target)"""
+
+        if self.restrict_final_colors and mb is not None and mb.generated_rows >= mb.max_rows:
+            colors_present = mb.colors_present()
+            if ub is not None:
+                colors_present = colors_present | {ub.color}
+            if colors_present:
+                return rnd.choice(list(colors_present))
+        return get_random_color()
+
+    def add_ammo(self, mb=None, ub=None):
         if len(self.magazine) < self.maxammo:
-            self.magazine.append(get_random_color())
+            self.magazine.append(self.script.popleft() if self.script else self.pick_ammo_color(mb, ub))
             return 'added'
         else:
             return 'full'

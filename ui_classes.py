@@ -21,6 +21,7 @@
 #############
 
 from classes import *
+import pygame.freetype as ft
 
 
 #######################
@@ -31,6 +32,8 @@ class Infopanel():
     """For information manipulation and displaying"""
 
     def __init__(self, screen, left=INFO_LEFT, top=1, width=INFOWIDTH, height=FIELDLENGTH):
+        self.magazine_label = Label(screen, top=top, font_size=(4 * CS) // 5)
+        self.magazine_label.write(TEXT_AMMO_HEADER)
         self.magazine = Magazine(screen, top=top+1, height=2)
         self.progress = Label(screen, top=top+4, pre_text='Progress: ')
         self.score = Label(screen, top=top+6, pre_text='SCORE: ', width=6)
@@ -245,18 +248,35 @@ class Menu:
 
 
 class Magazine(Label):
-    """Displays status of magazine"""
+    """Displays magazine ammo against its full capacity, with a warning flash once it's full"""
 
     def __init__(self, screen, l_shift=1, top=2, height=2):
         Label.__init__(self, screen, top, l_shift, height=height)
-        self.show_ammo([])
+        self.magazine = []
+        self.maxammo = MAXAMMO
+        self.flash_on = False
+        self.show_ammo([], MAXAMMO)
 
-    def show_ammo(self, magazine):
-        self.draw(pyg.Surface((self.width * CS, self.height * CS)), 0, 0)
-        for i, col in enumerate(magazine):
-            bullet = pyg.Surface((2 * CS, 2 * CS))
-            bullet.fill(col)
-            self.draw(bullet, 2 * i, 0)
+    def show_ammo(self, magazine, maxammo=MAXAMMO):
+        """Redraw every capacity slot: loaded bullets by color, empty slots up to maxammo"""
+
+        self.magazine = magazine
+        self.maxammo = maxammo
+        area = pyg.Surface((self.width * CS, self.height * CS))  # composed here, blitted in one go
+        for i in range(maxammo):
+            slot = pyg.Surface((2 * CS, 2 * CS))
+            slot.fill(magazine[i] if i < len(magazine) else MAGAZINE_EMPTY_SLOT)
+            pyg.draw.rect(slot, WHITE, slot.get_rect(), 1)
+            area.blit(slot, (2 * i * CS, 0))
+        if len(magazine) >= maxammo and self.flash_on:
+            warn_rect = pyg.Rect(0, 0, 2 * CS * maxammo, self.height * CS)
+            pyg.draw.rect(area, MAGAZINE_FULL_WARN, warn_rect, 4)  # full: stop wasting ammo
+        self.draw(area, 0, 0)
+
+    def blink_full(self):
+        """Toggle the full-magazine warning flash; a no-op redraw unless the magazine is full"""
+        self.flash_on = not self.flash_on
+        self.show_ammo(self.magazine, self.maxammo)
 
 
 class Background:
@@ -304,3 +324,96 @@ class Background:
         self.screen.blit(img, (0, 0))
         if group:
            group.draw(self.screen)
+
+
+class TutorialFont:
+    """A freetype font with kerning off - pygame's regular SDL_ttf font renders a stray gap
+    inside some words with the bundled default font (e.g. "whole" -> "w hole"); turning kerning
+    off in freetype avoids it, behind the same size()/get_linesize()/render() interface"""
+
+    def __init__(self, size):
+        self.font = ft.Font(None, size)
+        self.font.kerning = False
+
+    def size(self, text):
+        return self.font.get_rect(text).size
+
+    def get_linesize(self):
+        return self.font.get_sized_height()
+
+    def render(self, text, antialias, color):
+        surf, _ = self.font.render(text, color)
+        return surf
+
+
+class TutorialOverlay:
+    """Dark veil with bright cut-out highlights and a text popup, for the tutorial"""
+
+    def __init__(self, screen):
+        self.screen = screen
+        self.veil = pyg.Surface(screen.get_size(), pyg.SRCALPHA)
+        self.font = TutorialFont((3 * CS) // 4)
+        self.popup_rect = pyg.Rect((INFO_LEFT + 1) * CS, (3 + FIELDLENGTH // 2) * CS,
+                                    (INFOWIDTH - 2) * CS, (FIELDLENGTH // 2 - 3) * CS)  # below the status header
+        self.side_panel_rects = []  # info-panel-side highlight borders from the last draw(), for clear()
+
+    def outline(self, rect, cells):
+        """Outline a cell's edges, skipping sides shared with another highlighted cell - so a
+        cluster of cells reads as one shape with a single perimeter, like the game's blobs"""
+
+        if (rect.left, rect.top - CS) not in cells:
+            pyg.draw.line(self.screen, WHITE, (rect.left, rect.top + 1), (rect.right - 2, rect.top + 1), 3)
+        if (rect.left, rect.top + CS) not in cells:
+            pyg.draw.line(self.screen, WHITE, (rect.left, rect.bottom - 2), (rect.right - 2, rect.bottom - 2), 3)
+        if (rect.left - CS, rect.top) not in cells:
+            pyg.draw.line(self.screen, WHITE, (rect.left + 1, rect.top), (rect.left + 1, rect.bottom - 2), 3)
+        if (rect.left + CS, rect.top) not in cells:
+            pyg.draw.line(self.screen, WHITE, (rect.right - 2, rect.top), (rect.right - 2, rect.bottom - 2), 3)
+
+    def clear(self):
+        """Erase the popup and any highlight borders painted directly onto the info panel by the
+        last draw() call. The game field heals itself every frame (bg.act + sprites redraw over
+        it regardless), but the info panel has no such automatic wipe - without this, a border
+        around the score/progress/magazine would linger into a following silent watch phase"""
+
+        for rect in self.side_panel_rects:
+            pyg.draw.rect(self.screen, BLACK, rect)
+        self.side_panel_rects = []
+        pyg.draw.rect(self.screen, BLACK, self.popup_rect)
+
+    def draw(self, highlights, text, prompt=None):
+        """Dim the whole screen except `highlights`, then show a popup with `text` (+ optional prompt)"""
+
+        highlights = highlights if highlights else []
+        # only the info-panel side needs an explicit future clear() - the game field portion of
+        # any highlight border is already repainted every frame by bg.act + ALL_SPRITES.draw()
+        self.side_panel_rects = [rect for rect in highlights if rect.left >= INFO_LEFT * CS]
+        self.veil.fill((0, 0, 0, TUT_DIM_ALPHA))
+        for rect in highlights:
+            self.veil.fill((0, 0, 0, 0), rect)
+        self.screen.blit(self.veil, (0, 0))
+
+        cells = {(rect.left, rect.top) for rect in highlights if rect.size == (CS, CS)}
+        for rect in highlights:
+            if rect.size == (CS, CS):
+                self.outline(rect, cells)
+            else:
+                pyg.draw.rect(self.screen, WHITE, rect, 3)
+
+        # popup box sized to its content; wipe the whole reserved area first so a taller
+        # previous popup can never linger behind a shorter new one
+        pyg.draw.rect(self.screen, BLACK, self.popup_rect)
+        padding = 10
+        max_width = self.popup_rect.width - 2 * padding
+        lines = wrap_text(text, self.font, max_width)
+        if prompt:
+            lines = lines + [''] + wrap_text(prompt, self.font, max_width)
+        box = pyg.Rect(self.popup_rect.left, self.popup_rect.top, self.popup_rect.width,
+                       2 * padding + len(lines) * self.font.get_linesize())
+        pyg.draw.rect(self.screen, MENU_BG, box)
+        pyg.draw.rect(self.screen, WHITE, box, 3)
+
+        y = box.top + padding
+        for line in lines:
+            self.screen.blit(self.font.render(line, True, WHITE), (box.left + padding, y))
+            y += self.font.get_linesize()

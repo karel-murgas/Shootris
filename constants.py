@@ -67,6 +67,9 @@ UP_BLOB_ALPHA = 192
 EXPLODE_FLASH_COLOR = WHITE  # cells flash this color for one wave before the explosion kills them
 MENU_BG = (24, 24, 30)  # dedicated menu screens' background, distinct from the game field's black
 MENU_BUTTON_FILL = (45, 45, 54)  # unfocused button fill; GREEN is used for hover/keyboard focus
+MAGAZINE_EMPTY_SLOT = MENU_BUTTON_FILL  # fill for an unloaded capacity slot in the magazine display
+MAGAZINE_FULL_WARN = WHITE  # border flashed around the magazine once it can hold no more ammo; not a bullet color, so it never blends in
+TUT_DIM_ALPHA = 140  # opacity of the tutorial's dark veil; highlighted rects are punched back to full brightness
 CS = 30
 BG_IMG_FOLD = 'backgrounds/'
 TEXT_IMG_FOLD = 'textures/'
@@ -100,6 +103,7 @@ SOUND = {
 
 # Texts #
 TEXT_TIPS_HEADER = 'DID YOU KNOW?'
+TEXT_AMMO_HEADER = 'AMMO'
 TEXT_WELCOME = 'Welcome!'
 TEXT_PAUSE_INFO = 'The game is PAUSED'
 TEXT_UNPAUSE = 'Press SPACE to unpause'
@@ -131,6 +135,45 @@ TIPS = [
     'This game supports hotseat multiplayer'
 ]
 
+# Tutorial texts #
+TEXT_TUT_HEADER = 'TUTORIAL'
+TEXT_TUT_CONTINUE = 'Click or press SPACE to continue'
+TEXT_TUT_WELCOME = ('Welcome! The blob above grows and sinks toward the bottom wall - if any cell '
+                    'reaches it, you lose. Progress counts the spawned rows. The pale shape rising '
+                    'from the floor is an up-going blob; more on it later.')
+TEXT_TUT_MATCH = ('Time is frozen - only here in the tutorial, so you can read in peace. A real '
+                  'game never waits for you. The front bullet of your magazine matches the '
+                  'highlighted cells - left-click one of them. All touching cells of that color '
+                  'explode together.')
+TEXT_TUT_REVEAL = ('Destroyed cells uncover the picture hiding behind the field - every cell in '
+                   'the chain reveals its patch, not just the one you clicked - and each is '
+                   'worth one point, see the SCORE.')
+TEXT_TUT_AMMO = ('Ammo refills on its own over time, up to the magazine size - you just watched '
+                 'new bullets appear.')
+TEXT_TUT_SWAP = ('The front bullet does not match the highlighted cells. Right-click anywhere to send it '
+                 'to the back - once the matching color is in front, shoot.')
+TEXT_TUT_FULL = ('The magazine just filled to the brim. A full magazine takes no new colors - and '
+                 'the front bullet matches nothing on the board anymore.')
+TEXT_TUT_WASTE = ('Hoarding a useless bullet just clogs the magazine. Fire it anywhere - even '
+                  'into empty space - to make room for a fresh color.')
+TEXT_TUT_UP_RISE = ('Remember the pale up-going blob? Time will run again for a moment while it '
+                    'crawls over some leftover cells - it is harmless on its own, even if it hits '
+                    'the ceiling.')
+TEXT_TUT_UP_SHOOT = ('Shoot the up-going blob! It destroys every cell it covers, of ANY color - '
+                     'perfect for clearing lonely leftovers. Up-going cell kills do not uncover the '
+                     'picture, though.')
+TEXT_TUT_UP_SPAWN = ('Every up-going blob you shoot makes room for a new one. Time will run again '
+                     'while a fresh one heads for these two highlighted blocks below.')
+TEXT_TUT_UP_CONNECT = ('An up-going blob sets off every connected block of its own color it '
+                       'touches when shot - even separate blobs go up together, bridged into '
+                       'one chain reaction.')
+TEXT_TUT_FINISH = ('You know it all now! Full control is yours from here - finish the board '
+                   'yourself and reveal the whole picture. Good luck!')
+TEXT_TUT_DONE = ('You did it! The picture is fully revealed - that is a win, same as in a real '
+                 'game. Pause anytime with SPACE. Enjoy Shootris!')
+TEXT_TUT_DONE_LOSE = ('A cell reached the bottom - that is a loss, same as in a real game. No '
+                      'matter, you know the ropes now. Go try a real round!')
+
 # Events #
 END_EVENT = pyg.USEREVENT + 1
 ADD_AMMO_EVENT = pyg.USEREVENT + 2
@@ -140,6 +183,7 @@ BLINK_EVENT = pyg.USEREVENT + 5
 TIPS_EVENT = pyg.USEREVENT + 6
 FADE_EVENT = pyg.USEREVENT + 7
 EXPLODE_EVENT = pyg.USEREVENT + 8
+MAGAZINE_FLASH_EVENT = pyg.USEREVENT + 9
 
 
 ############
@@ -164,11 +208,41 @@ BOTTOMSTICK = 0.5  # probability of taking color from left cell
 UP_LEFTSTICK = 0.4
 UP_BOTTOMSTICK = 0.75
 
+# Tutorial #
+TUT_SEED = 20160521  # fixed RNG seed pinning the few remaining random picks (background, fallback ammo)
+TUT_RISE_ROWS = 4  # rows the main blob spawns while it watches, right after the welcome/threat popup
+TUT_AMMO_DEMO = 2  # bullets to wait for during the ammo-generation demo
+TUT_MAXAMMO = 4  # smaller magazine than a real game, so the full-magazine lesson arrives quickly
+TUT_UP_BLOB_SPEED = 75  # ms per up-blob step; slower than UP_BLOB_SPEED so it crawls into position on cue
+TUT_UP_FAST_SPEED = 20  # the second up-blob hurries toward the bridge demo instead
+TUT_FINISH_AMMO_SPEED = 800  # faster than ADD_AMMO_SPEED - generous ammo so finishing the board feels quick
+# The prebuilt board: one list per spawned row, first row spawns first and ends up lowest on screen.
+# Values index into COLORS. The layout is authored around the lessons: color 0 forms the single
+# region for the first shot (and must appear nowhere else - the waste-a-bullet lesson relies on
+# color 0 being extinct after that shot), color 1 forms the swap-lesson region (plus harmless lone
+# accents), color 2 forms exactly the two separated blocks the up-blob bridges, color 3 is filler,
+# and color 4 never appears - it is reserved for the first up-blob so shooting it can't chain.
+TUT_MB_SCRIPT = [
+    [3, 3, 0, 0, 0, 0, 3, 1, 3, 3, 3, 3, 1, 3, 3],
+    [3, 3, 0, 0, 0, 0, 3, 3, 3, 1, 1, 1, 1, 3, 3],
+    [1, 3, 3, 3, 3, 3, 3, 3, 3, 1, 1, 1, 1, 3, 1],
+    [3, 3, 3, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+    [3, 3, 2, 2, 3, 1, 3, 3, 3, 2, 2, 3, 3, 1, 3],
+    [3, 1, 2, 2, 3, 3, 3, 1, 3, 2, 2, 3, 1, 3, 3],
+    [3, 3, 3, 3, 3, 3, 1, 3, 3, 3, 3, 1, 3, 3, 3],
+]
+# Planned bullet arrivals (indices into COLORS), ordered so the right color is at the front for
+# each lesson: c0+c1 arrive for the swap lesson, then c4+c2+c3 fill the magazine (front c0 is
+# extinct by then - the bullet to waste), c4 shoots the first up-blob, c2 the bridging one.
+TUT_AMMO = [0, 1, 4, 2, 3, 3, 3, 3, 3, 3]
+TUT_START_AMMO = [0]  # preloaded magazine: one bullet matching the first target region
+
 # Frequencies #
 ADD_AMMO_SPEED = 1500
 MAIN_BLOB_SPEED = 90
 UP_BLOB_SPEED = 40
 BLINK_TIME = 500
+MAGAZINE_FLASH_SPEED = 150  # ms between magazine full-warning toggles - snappier than BLINK_TIME on purpose
 TIPS_TIME = 8000
 EXPLODE_WAVE_SPEED = 45  # ms between explosion waves, from the shot outward
 

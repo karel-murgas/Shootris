@@ -4,7 +4,9 @@
       "Bash(git add *)",
       "Bash(python -m pytest -q)",
       "Skill(run)",
-      "Skill(run:*)"
+      "Skill(run:*)",
+      "Bash(python -m pytest tests/test_utilities.py -q)",
+      "Bash(git diff *)"
     ]
   }
 }
